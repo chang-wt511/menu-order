@@ -2,7 +2,8 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 1. 禁止手機端雙擊放大或雙指縮放，防止快速點餐時畫面跳動 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>香村簡易點餐工具</title>
     <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,6 +12,10 @@
     <!-- 引入 Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
+        /* 全域鎖定觸控行為為 manipulation，徹底消除行動端瀏覽器 300ms 點擊延遲與連點縮放 */
+        html, body, button {
+            touch-action: manipulation;
+        }
         body {
             font-family: 'Inter', 'Noto Sans TC', sans-serif;
             background-color: #f8fafc;
@@ -93,21 +98,17 @@
                         <div class="flex items-center justify-between">
                             <label for="output-textarea" class="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
                                 <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
-                                輸出格式預覽 (可直接複製)
+                                輸出格式預覽 (品項 x數量)
                             </label>
-                            <select id="format-selector" class="text-xs bg-white border border-slate-300 rounded-lg px-2 py-1 text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500">
-                                <option value="standard">品項 x數量</option>
-                                <option value="numbered">1. 品項 x數量</option>
-                                <option value="space">品項 數量份</option>
-                            </select>
                         </div>
                         
+                        <!-- font-size 設為 16px (text-base)，防止 iOS Safari 點擊輸入框時自動放大畫面 -->
                         <textarea 
                             id="output-textarea" 
                             rows="6" 
                             readonly 
                             placeholder="點餐後的文字明細將顯示在這裡..."
-                            class="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-700 font-mono focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none shadow-inner"
+                            class="w-full rounded-xl border border-slate-200 bg-white p-3 text-base text-slate-700 font-mono focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none shadow-inner"
                         ></textarea>
 
                         <!-- 操作按鈕群 -->
@@ -221,7 +222,6 @@
         const totalCountBadge = document.getElementById('total-count-badge');
         const copyBtn = document.getElementById('copy-btn');
         const clearBtn = document.getElementById('clear-btn');
-        const formatSelector = document.getElementById('format-selector');
         const toastEl = document.getElementById('toast');
         const toastMsgEl = document.getElementById('toast-message');
 
@@ -236,7 +236,6 @@
             // 綁定全域按鈕事件
             copyBtn.addEventListener('click', copyOrderToClipboard);
             clearBtn.addEventListener('click', clearAllOrders);
-            formatSelector.addEventListener('change', updateOutputText);
         }
 
         // 渲染左側菜單卡片
@@ -272,7 +271,7 @@
                             <button 
                                 type="button" 
                                 onclick="changeQuantity('${itemName}', -1)"
-                                class="w-8 h-8 rounded-lg border border-slate-300 bg-white text-slate-600 flex items-center justify-center hover:bg-slate-100 active:scale-90 transition disabled:opacity-30 disabled:pointer-events-none"
+                                class="w-9 h-9 rounded-lg border border-slate-300 bg-white text-slate-600 flex items-center justify-center hover:bg-slate-100 active:scale-90 transition disabled:opacity-30 disabled:pointer-events-none select-none"
                                 data-minus-btn="${itemName}"
                                 disabled
                                 aria-label="減少 ${itemName}"
@@ -286,7 +285,7 @@
                             <button 
                                 type="button" 
                                 onclick="changeQuantity('${itemName}', 1)"
-                                class="w-8 h-8 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center hover:bg-amber-400 active:scale-90 transition shadow-sm"
+                                class="w-9 h-9 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center hover:bg-amber-400 active:scale-90 transition shadow-sm select-none"
                                 aria-label="增加 ${itemName}"
                             >
                                 <i data-lucide="plus" class="w-4 h-4"></i>
@@ -425,45 +424,42 @@
             updateOutputText();
         }
 
-        // 依照選擇的格式生成文字輸出
+        // 固定輸出「品項 x數量」格式
         function updateOutputText() {
             if (orderList.length === 0) {
                 outputTextarea.value = '';
                 return;
             }
 
-            const format = formatSelector.value;
-            const totalQty = orderList.reduce((sum, item) => sum + item.qty, 0);
-
-            const lines = orderList.map((item, idx) => {
-                if (format === 'numbered') {
-                    return `${idx + 1}. ${item.name} x${item.qty}`;
-                } else if (format === 'space') {
-                    return `${item.name} ${item.qty}份`;
-                } else {
-                    // 預設 standard: 品項 x數量
-                    return `${item.name} x${item.qty}`;
-                }
-            });
-
-            lines.push('---');
-            lines.push(`總計：${totalQty} 份`);
-
+            const lines = orderList.map(item => `${item.name} x${item.qty}`);
             outputTextarea.value = lines.join('\n');
         }
 
         // ==========================================
-        // 7. 複製功能 (使用相容性最高的 execCommand)
+        // 7. 複製功能 (優先使用 Clipboard API 並保留相容備援)
         // ==========================================
-        function copyOrderToClipboard() {
+        async function copyOrderToClipboard() {
             if (orderList.length === 0) return;
 
+            const textToCopy = outputTextarea.value;
+
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(textToCopy);
+                    showToast('點餐明細已複製！可直接貼上發送');
+                } else {
+                    fallbackCopyText(textToCopy);
+                }
+            } catch (err) {
+                fallbackCopyText(textToCopy);
+            }
+        }
+
+        function fallbackCopyText(text) {
             try {
                 outputTextarea.select();
-                outputTextarea.setSelectionRange(0, 99999); // 支援行動裝置
+                outputTextarea.setSelectionRange(0, 99999);
                 const successful = document.execCommand('copy');
-                
-                // 取消選取反白狀態，保持視覺整潔
                 window.getSelection().removeAllRanges();
 
                 if (successful) {

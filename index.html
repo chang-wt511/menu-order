@@ -10,7 +10,7 @@
     <!-- 引入 Google Fonts (Noto Sans TC 與 Inter) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <!-- 引入 Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
     <style>
         /* 全域鎖定觸控行為為 manipulation，徹底消除行動端瀏覽器 300ms 點擊延遲與連點縮放 */
         html, body, button {
@@ -164,7 +164,7 @@
     </div>
 
     <!-- 單一品項客製化彈窗 Modal (三寶麵線專用：醋、沙茶) -->
-    <div id="custom-modal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div id="custom-modal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             <!-- Modal 標題 -->
             <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
@@ -400,6 +400,11 @@
         const modalItemTitle = document.getElementById('modal-item-title');
         const modalQtyDisplay = document.getElementById('modal-qty-display');
 
+        // 圖示庫載入失敗時不可中斷點餐流程
+        function safeIcons() {
+            try { if (window.lucide) window.lucide.createIcons(); } catch (e) { console.warn('lucide error', e); }
+        }
+
         function getCurrentStore() {
             return STORES_DATA.find(s => s.id === currentStoreId) || STORES_DATA[0];
         }
@@ -489,7 +494,7 @@
             renderStoreTabs();
             renderMenu();
             updateOrderUI();
-            lucide.createIcons();
+            safeIcons();
         };
 
         function renderStoreTabs() {
@@ -628,7 +633,7 @@
             modalQtyDisplay.textContent = modalState.qty;
             updateModalButtonsUI();
             customModal.classList.remove('hidden');
-            lucide.createIcons();
+            safeIcons();
         };
 
         window.closeCustomModal = function() {
@@ -873,7 +878,7 @@
                     `;
                     orderItemsList.appendChild(li);
                 });
-                lucide.createIcons();
+                safeIcons();
             }
 
             // 4. 更新純文字輸出區

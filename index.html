@@ -2,9 +2,9 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <!-- 1. 禁止手機端雙擊放大或雙指縮放，防止快速點餐時畫面跳動 -->
+    <!-- 禁止手機端雙擊放大或雙指縮放，防止快速點餐時畫面跳動 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>香村簡易點餐工具</title>
+    <title>簡易點餐系統</title>
     <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- 引入 Google Fonts (Noto Sans TC 與 Inter) -->
@@ -40,18 +40,25 @@
 </head>
 <body class="text-slate-800 antialiased min-h-screen flex flex-col">
 
-    <!-- 頂部導覽列 -->
+    <!-- 頂部導覽列與餐廳切換頁籤 (方案 A：單頁式切換) -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-2.5">
-                <div class="bg-amber-500 text-white p-2 rounded-xl shadow-sm">
-                    <i data-lucide="utensils" class="w-5 h-5"></i>
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+            <!-- 動態餐廳標題 -->
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="bg-amber-500 text-white p-2 rounded-xl shadow-sm">
+                        <i data-lucide="utensils" class="w-5 h-5"></i>
+                    </div>
+                    <h1 id="header-title" class="text-lg sm:text-xl font-bold tracking-tight text-slate-900">
+                        香村簡易點餐系統
+                    </h1>
                 </div>
-                <h1 class="text-xl font-bold tracking-tight text-slate-900">香村簡易點餐系統</h1>
             </div>
-            <div class="text-sm text-slate-500 hidden sm:block">
-                點擊「+」加入餐點，系統將依菜單順序自動整理明細
-            </div>
+
+            <!-- 餐廳切換頁籤容器 (各自獨立保存點餐狀態) -->
+            <nav id="store-tabs" class="flex items-center gap-2 overflow-x-auto pb-0.5 sm:pb-0" aria-label="餐廳選擇">
+                <!-- 頁籤將透過 JavaScript 動態渲染 -->
+            </nav>
         </div>
     </header>
 
@@ -65,15 +72,15 @@
             </div>
 
             <!-- 右側：點餐明細與輸出區 (佔 5 欄，在桌機版固定於上方) -->
-            <div class="lg:col-span-5 lg:sticky lg:top-22 space-y-4">
+            <div class="lg:col-span-5 lg:sticky lg:top-24 space-y-4">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
                     <!-- 明細標題列 -->
                     <div class="p-4 sm:p-5 bg-slate-900 text-white flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <i data-lucide="receipt" class="w-5 h-5 text-amber-400"></i>
-                            <h2 class="font-bold text-lg">點餐明細（依菜單順序）</h2>
+                            <h2 id="order-panel-title" class="font-bold text-base sm:text-lg">點餐明細（依菜單順序）</h2>
                         </div>
-                        <span id="total-count-badge" class="bg-amber-500 text-slate-950 text-xs font-bold px-2.5 py-1 rounded-full">
+                        <span id="total-count-badge" class="bg-amber-500 text-slate-950 text-xs font-bold px-2.5 py-1 rounded-full shrink-0">
                             共 0 份
                         </span>
                     </div>
@@ -149,9 +156,14 @@
 
     <script>
         // ==========================================
-        // 1. 菜單資料定義 (依照分類整理)
+        // 1. 多餐廳菜單資料庫 (未來新增餐廳只需在此陣列新增物件)
         // ==========================================
-        const MENU_DATA = [
+        const STORES_DATA = [
+            {
+                id: "xiangcun",
+                shortName: "香村",
+                title: "香村簡易點餐系統",
+                menu: [
             {
                 category: "火鍋",
                 icon: "flame",
@@ -159,9 +171,11 @@
                 bgBadge: "bg-rose-50",
                 items: [
                     "韓式泡菜鍋",
+                    "海鮮豆腐鍋",
                     "沙茶牛肉鍋",
-                    "沙茶豬肉鍋",
+                    "沙茶羊肉鍋",
                     "經典泡菜鍋",
+                    "沙茶豬肉鍋",
                     "單點白飯"
                 ]
             },
@@ -172,7 +186,7 @@
                 bgBadge: "bg-amber-50",
                 items: [
                     "沙茶牛肉炒飯",
-                    "沙茶豬肉炒飯",
+                    "沙茶豬肉炒饭",
                     "泡菜炒飯",
                     "鹹豬肉炒飯",
                     "蒜香炒飯",
@@ -204,23 +218,89 @@
                     "豆腐湯"
                 ]
             }
+        ]
+            },
+            {
+                id: "sanbao",
+                shortName: "三寶麵線",
+                title: "三寶麵線簡易點餐系統",
+                menu: [
+                    {
+                        category: "麵線",
+                        icon: "soup",
+                        color: "text-amber-600",
+                        bgBadge: "bg-amber-50",
+                        items: [
+                            "大腸麵線(大)",
+                            "大腸麵線(小)",
+                            "肉羹麵線(大)",
+                            "肉羹麵線(小)",
+                            "蚵仔麵線(大)",
+                            "蚵仔麵線(小)",
+                            "三寶麵線(大)",
+                            "三寶麵線(小)",
+                            "清麵線(大)",
+                            "清麵線(小)"
+                        ]
+                    },
+                    {
+                        category: "香菇肉羹 / 飯",
+                        icon: "utensils-crossed",
+                        color: "text-orange-500",
+                        bgBadge: "bg-orange-50",
+                        items: [
+                            "香菇肉羹麵",
+                            "香菇肉羹飯",
+                            "香菇肉羹米粉",
+                            "香菇肉羹湯(大)",
+                            "香菇肉羹湯(小)",
+                            "滷肉飯(大)",
+                            "滷肉飯(小)"
+                        ]
+                    },
+                    {
+                        category: "小菜",
+                        icon: "salad",
+                        color: "text-emerald-600",
+                        bgBadge: "bg-emerald-50",
+                        items: [
+                            "燙青菜",
+                            "皮蛋豆腐",
+                            "滷大腸",
+                            "海帶",
+                            "豆干",
+                            "蒜泥白肉"
+                        ]
+                    }
+                ]
+            }
         ];
 
         // ==========================================
-        // 2. 狀態管理與菜單索引建立
-        // 建立餐點名稱對應菜單原始順序的 Map (時間複雜度 O(1) 查詢)
+        // 2. 狀態管理與多店獨立儲存空間
         // ==========================================
-        const MENU_ORDER_MAP = new Map();
-        MENU_DATA.flatMap(group => group.items).forEach((name, index) => {
-            MENU_ORDER_MAP.set(name, index);
+        let currentStoreId = STORES_DATA[0].id;
+        
+        // 為每家餐廳建立獨立的訂單陣列與菜單順序索引 Map
+        const storeOrders = {};     // 格式: { xiangcun: [...], sanbao: [...] }
+        const storeOrderMaps = {};  // 格式: { xiangcun: Map, sanbao: Map }
+
+        STORES_DATA.forEach(store => {
+            storeOrders[store.id] = [];
+            const orderMap = new Map();
+            store.menu.flatMap(group => group.items).forEach((name, index) => {
+                orderMap.set(name, index);
+            });
+            storeOrderMaps[store.id] = orderMap;
         });
 
-        let orderList = [];
         let toastTimeout = null;
 
         // ==========================================
         // 3. DOM 元素參照
         // ==========================================
+        const headerTitle = document.getElementById('header-title');
+        const storeTabs = document.getElementById('store-tabs');
         const menuContainer = document.getElementById('menu-container');
         const orderItemsList = document.getElementById('order-items-list');
         const emptyState = document.getElementById('empty-state');
@@ -231,24 +311,96 @@
         const toastEl = document.getElementById('toast');
         const toastMsgEl = document.getElementById('toast-message');
 
+        // 取得目前啟用中的餐廳物件與訂單陣列
+        function getCurrentStore() {
+            return STORES_DATA.find(s => s.id === currentStoreId) || STORES_DATA[0];
+        }
+
+        function getCurrentOrderList() {
+            return storeOrders[currentStoreId];
+        }
+
         // ==========================================
         // 4. 初始化與渲染函數
         // ==========================================
         function init() {
-            renderMenu();
-            updateOrderUI();
-            lucide.createIcons();
+            // 支援透過網址參數 (?store=sanbao) 或 Hash (#sanbao) 指定預設開啟的餐廳
+            const urlParams = new URLSearchParams(window.location.search);
+            const storeParam = urlParams.get('store');
+            const hashParam = window.location.hash.replace('#', '');
+            const targetStore = storeParam || hashParam;
+
+            if (targetStore && STORES_DATA.some(s => s.id === targetStore)) {
+                currentStoreId = targetStore;
+            }
+
+            switchStore(currentStoreId, false);
 
             // 綁定全域按鈕事件
             copyBtn.addEventListener('click', copyOrderToClipboard);
             clearBtn.addEventListener('click', clearAllOrders);
         }
 
-        // 渲染左側菜單卡片
+        // 切換餐廳分頁
+        window.switchStore = function(storeId, updateUrl = true) {
+            currentStoreId = storeId;
+            const store = getCurrentStore();
+
+            // 更新網頁與頂部標題
+            document.title = store.title;
+            headerTitle.textContent = store.title;
+
+            // 使用 Hash 更新網址並加上 try/catch，避免在 blob: 預覽環境或沙盒 iFrame 觸發 SecurityError
+            if (updateUrl) {
+                try {
+                    if (window.location.protocol !== 'blob:') {
+                        window.location.hash = storeId;
+                    }
+                } catch (e) {
+                    // 忽略受限預覽環境的網址修改限制
+                }
+            }
+
+            renderStoreTabs();
+            renderMenu();
+            updateOrderUI();
+            lucide.createIcons();
+        };
+
+        // 渲染頂部餐廳切換頁籤 (含各店目前點餐份數小徽章)
+        function renderStoreTabs() {
+            storeTabs.innerHTML = '';
+
+            STORES_DATA.forEach(store => {
+                const isActive = store.id === currentStoreId;
+                const storeTotalQty = storeOrders[store.id].reduce((sum, item) => sum + item.qty, 0);
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.onclick = () => switchStore(store.id);
+                
+                btn.className = isActive
+                    ? 'flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 text-white text-sm font-bold shadow-sm transition shrink-0'
+                    : 'flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 text-slate-600 text-sm font-medium hover:bg-slate-200 hover:text-slate-900 transition shrink-0';
+
+                const badgeHtml = storeTotalQty > 0
+                    ? `<span class="px-1.5 py-0.2 rounded-full text-xs font-bold ${isActive ? 'bg-amber-500 text-slate-950' : 'bg-amber-200 text-amber-900'}">${storeTotalQty}</span>`
+                    : '';
+
+                btn.innerHTML = `
+                    <span>${store.shortName}</span>
+                    ${badgeHtml}
+                `;
+                storeTabs.appendChild(btn);
+            });
+        }
+
+        // 渲染當前餐廳左側菜單卡片
         function renderMenu() {
+            const store = getCurrentStore();
             menuContainer.innerHTML = '';
 
-            MENU_DATA.forEach(group => {
+            store.menu.forEach(group => {
                 const section = document.createElement('section');
                 section.className = 'bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5';
 
@@ -308,27 +460,29 @@
         }
 
         // ==========================================
-        // 5. 核心點餐邏輯
+        // 5. 核心點餐邏輯 (針對當前餐廳操作)
         // ==========================================
         window.changeQuantity = function(itemName, delta) {
             try {
+                const orderList = getCurrentOrderList();
+                const orderMap = storeOrderMaps[currentStoreId];
                 const existingIndex = orderList.findIndex(item => item.name === itemName);
 
                 if (existingIndex > -1) {
                     // 品項已在訂單中，更新數量
                     const newQty = orderList[existingIndex].qty + delta;
                     if (newQty <= 0) {
-                        // 數量歸零，從陣列中移除
                         orderList.splice(existingIndex, 1);
                     } else {
                         orderList[existingIndex].qty = newQty;
                     }
                 } else if (delta > 0) {
-                    // 新點品項加入陣列，並依照 MENU_DATA 的原始索引重新排序
+                    // 新點品項加入陣列，並依照該店菜單的原始索引重新排序
                     orderList.push({ name: itemName, qty: delta });
-                    orderList.sort((a, b) => (MENU_ORDER_MAP.get(a.name) ?? 999) - (MENU_ORDER_MAP.get(b.name) ?? 999));
+                    orderList.sort((a, b) => (orderMap.get(a.name) ?? 999) - (orderMap.get(b.name) ?? 999));
                 }
 
+                renderStoreTabs(); // 更新分頁上的份數徽章
                 updateOrderUI();
             } catch (error) {
                 console.error('更新餐點數量時發生錯誤:', error);
@@ -337,22 +491,27 @@
 
         // 移除單一品項
         window.removeItem = function(itemName) {
-            orderList = orderList.filter(item => item.name !== itemName);
+            storeOrders[currentStoreId] = getCurrentOrderList().filter(item => item.name !== itemName);
+            renderStoreTabs();
             updateOrderUI();
         };
 
-        // 清空所有訂單
+        // 清空當前餐廳訂單
         function clearAllOrders() {
+            const orderList = getCurrentOrderList();
             if (orderList.length === 0) return;
-            orderList = [];
+            storeOrders[currentStoreId] = [];
+            renderStoreTabs();
             updateOrderUI();
-            showToast('已清空所有點餐紀錄');
+            showToast(`已清空「${getCurrentStore().shortName}」的點餐紀錄`);
         }
 
         // ==========================================
         // 6. 同步更新畫面 (菜單數量、右側明細、輸出文字)
         // ==========================================
         function updateOrderUI() {
+            const orderList = getCurrentOrderList();
+
             // 1. 更新左側菜單上的數字與按鈕狀態
             const allQtyDisplays = document.querySelectorAll('[data-qty-display]');
             allQtyDisplays.forEach(el => {
@@ -362,7 +521,6 @@
                 
                 el.textContent = qty;
                 
-                // 更新減號按鈕狀態與卡片高亮
                 const minusBtn = document.querySelector(`[data-minus-btn="${name}"]`);
                 const card = document.querySelector(`[data-item-card="${name}"]`);
                 
@@ -380,7 +538,7 @@
                 }
             });
 
-            // 2. 計算總份數
+            // 2. 計算當前餐廳總份數
             const totalQty = orderList.reduce((sum, item) => sum + item.qty, 0);
             totalCountBadge.textContent = `共 ${totalQty} 份`;
 
@@ -402,12 +560,12 @@
                     li.className = 'flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-sm';
                     li.innerHTML = `
                         <div class="flex items-center gap-2.5">
-                            <span class="w-5 h-5 rounded-full bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center">
+                            <span class="w-5 h-5 rounded-full bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center shrink-0">
                                 ${index + 1}
                             </span>
                             <span class="font-medium text-slate-800">${item.name}</span>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 shrink-0">
                             <span class="font-bold text-amber-600 bg-amber-100/70 px-2 py-0.5 rounded-md">
                                 x${item.qty}
                             </span>
@@ -423,7 +581,6 @@
                     `;
                     orderItemsList.appendChild(li);
                 });
-                // 重新渲染動態產生的圖示
                 lucide.createIcons();
             }
 
@@ -433,6 +590,7 @@
 
         // 固定輸出「品項 x數量」格式
         function updateOutputText() {
+            const orderList = getCurrentOrderList();
             if (orderList.length === 0) {
                 outputTextarea.value = '';
                 return;
@@ -446,23 +604,25 @@
         // 7. 複製功能 (優先使用 Clipboard API 並保留相容備援)
         // ==========================================
         async function copyOrderToClipboard() {
+            const orderList = getCurrentOrderList();
             if (orderList.length === 0) return;
 
             const textToCopy = outputTextarea.value;
+            const storeName = getCurrentStore().shortName;
 
             try {
                 if (navigator.clipboard && window.isSecureContext) {
                     await navigator.clipboard.writeText(textToCopy);
-                    showToast('點餐明細已複製！可直接貼上發送');
+                    showToast(`已複製「${storeName}」點餐明細！`);
                 } else {
-                    fallbackCopyText(textToCopy);
+                    fallbackCopyText(textToCopy, storeName);
                 }
             } catch (err) {
-                fallbackCopyText(textToCopy);
+                fallbackCopyText(textToCopy, storeName);
             }
         }
 
-        function fallbackCopyText(text) {
+        function fallbackCopyText(text, storeName) {
             try {
                 outputTextarea.select();
                 outputTextarea.setSelectionRange(0, 99999);
@@ -470,7 +630,7 @@
                 window.getSelection().removeAllRanges();
 
                 if (successful) {
-                    showToast('點餐明細已複製！可直接貼上發送');
+                    showToast(`已複製「${storeName}」點餐明細！`);
                 } else {
                     showToast('複製失敗，請手動全選複製');
                 }

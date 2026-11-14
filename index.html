@@ -36,12 +36,23 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
+        /* 隱藏橫向分類導覽列的捲軸但保留滑動功能 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
     </style>
 </head>
-<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+<body class="text-slate-800 antialiased min-h-screen flex flex-col pb-20 lg:pb-0">
 
     <!-- 頂部導覽列與餐廳切換頁籤 -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm">
+    <header id="main-header" class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
             <!-- 動態餐廳標題與獨立網址分享按鈕 -->
             <div class="flex items-center justify-between gap-3">
@@ -72,16 +83,58 @@
     </header>
 
     <!-- 主要內容區 -->
-    <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
             <!-- 左側：菜單選擇區 (佔 7 欄) -->
-            <div class="lg:col-span-7 space-y-6" id="menu-container">
-                <!-- 菜單分類將透過 JavaScript 動態渲染於此 -->
+            <div class="lg:col-span-7 space-y-4">
+                
+                <!-- 置頂快速導覽工具列 (解決長菜單滑動痛點：搜尋 + 分類錨點) -->
+                <div id="menu-sticky-toolbar" class="sticky top-[57px] sm:top-[61px] z-20 bg-slate-50/95 backdrop-blur-md pt-1 pb-2.5 -mx-4 px-4 sm:mx-0 sm:px-0 border-b border-slate-200/70 space-y-2.5">
+                    <!-- 關鍵字即時搜尋框 -->
+                    <div class="relative">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                        <input 
+                            type="text" 
+                            id="menu-search-input" 
+                            placeholder="快速搜尋餐點（例如：虱目魚、泡菜、烏龍...）" 
+                            class="w-full pl-9 pr-9 py-2 rounded-xl border border-slate-200 bg-white text-base sm:text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-sm transition"
+                        />
+                        <button 
+                            type="button" 
+                            id="clear-search-btn"
+                            onclick="clearMenuSearch()"
+                            class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
+                            aria-label="清除搜尋"
+                        >
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    <!-- 橫向分類快速跳轉膠囊列 -->
+                    <div id="category-nav-pills" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                        <!-- 分類膠囊按鈕由 JS 動態產生 -->
+                    </div>
+                </div>
+
+                <!-- 搜尋無結果提示 -->
+                <div id="search-empty-state" class="hidden bg-white rounded-2xl border border-slate-200 p-8 text-center">
+                    <i data-lucide="search-x" class="w-10 h-10 text-slate-300 mx-auto mb-2"></i>
+                    <p class="text-sm font-bold text-slate-700">找不到符合的餐點</p>
+                    <p class="text-xs text-slate-400 mt-1">請嘗試其他關鍵字，或點擊下方按鈕顯示全部菜單</p>
+                    <button type="button" onclick="clearMenuSearch()" class="mt-3 px-4 py-1.5 rounded-xl bg-amber-500 text-slate-950 text-xs font-bold hover:bg-amber-400 transition">
+                        顯示全部菜單
+                    </button>
+                </div>
+
+                <!-- 菜單分類區塊容器 -->
+                <div class="space-y-4" id="menu-container">
+                    <!-- 菜單分類將透過 JavaScript 動態渲染於此 -->
+                </div>
             </div>
 
             <!-- 右側：點餐明細與輸出區 (佔 5 欄，在桌機版固定於上方) -->
-            <div class="lg:col-span-5 lg:sticky lg:top-24 space-y-4">
+            <div id="order-summary-section" class="lg:col-span-5 lg:sticky lg:top-20 space-y-4 scroll-mt-24">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
                     <!-- 明細標題列 -->
                     <div class="p-4 sm:p-5 bg-slate-900 text-white flex items-center justify-between">
@@ -155,8 +208,29 @@
         </div>
     </main>
 
+    <!-- 手機版底部懸浮點餐狀態列 (免滑回最下方即可一鍵跳至明細區) -->
+    <div id="mobile-floating-bar" class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-slate-900/95 backdrop-blur-md text-white border-t border-slate-800 px-4 py-2.5 shadow-2xl flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-9 h-9 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold shrink-0">
+                <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+            </div>
+            <div class="min-w-0">
+                <div class="text-xs text-slate-400">目前點餐進度</div>
+                <div id="mobile-bar-summary" class="text-sm font-bold text-white truncate">尚未選擇餐點</div>
+            </div>
+        </div>
+        <button 
+            type="button" 
+            onclick="scrollToOrderSummary()"
+            class="px-4 py-2 rounded-xl bg-amber-500 text-slate-950 text-xs sm:text-sm font-bold hover:bg-amber-400 active:scale-95 transition shrink-0 flex items-center gap-1 shadow-sm"
+        >
+            <span>查看與複製</span>
+            <i data-lucide="arrow-down" class="w-3.5 h-3.5"></i>
+        </button>
+    </div>
+
     <!-- 提示訊息 Toast (取代 alert) -->
-    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div id="toast" class="fixed bottom-20 lg:bottom-5 right-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
         <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2.5 text-sm font-medium border border-slate-700">
             <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-400"></i>
             <span id="toast-message">已複製到剪貼簿！</span>
@@ -552,6 +626,9 @@
         // ==========================================
         let currentStoreId = STORES_DATA[0].id;
         let isSoloMode = false;
+        let currentSearchQuery = '';
+        let activeCategoryIndex = 0;
+        const collapsedCategories = {}; // 紀錄各店摺疊狀態: { "lingwu_0": true }
 
         // 為每家餐廳建立獨立的訂單陣列與菜單順序索引 Map
         const storeOrders = {};     // 格式: { xiangcun: [...], sanbao: [...] }
@@ -584,6 +661,11 @@
         const headerTitle = document.getElementById('header-title');
         const storeTabs = document.getElementById('store-tabs');
         const menuContainer = document.getElementById('menu-container');
+        const categoryNavPills = document.getElementById('category-nav-pills');
+        const menuSearchInput = document.getElementById('menu-search-input');
+        const clearSearchBtn = document.getElementById('clear-search-btn');
+        const searchEmptyState = document.getElementById('search-empty-state');
+        const mobileBarSummary = document.getElementById('mobile-bar-summary');
         const orderItemsList = document.getElementById('order-items-list');
         const emptyState = document.getElementById('empty-state');
         const outputTextarea = document.getElementById('output-textarea');
@@ -663,6 +745,22 @@
                 });
             }
 
+            // 綁定即時搜尋輸入事件
+            if (menuSearchInput) {
+                menuSearchInput.addEventListener('input', (e) => {
+                    currentSearchQuery = e.target.value.trim();
+                    if (clearSearchBtn) {
+                        clearSearchBtn.classList.toggle('hidden', currentSearchQuery.length === 0);
+                    }
+                    renderMenu();
+                    updateOrderUI();
+                    safeIcons();
+                });
+            }
+
+            // 監聽視窗捲動以自動高亮當前所在的分類膠囊 (ScrollSpy)
+            window.addEventListener('scroll', handleScrollSpy, { passive: true });
+
             switchStore(currentStoreId, false);
 
             copyBtn.addEventListener('click', copyOrderToClipboard);
@@ -671,6 +769,11 @@
 
         window.switchStore = function(storeId, updateUrl = true) {
             currentStoreId = storeId;
+            currentSearchQuery = '';
+            activeCategoryIndex = 0;
+            if (menuSearchInput) menuSearchInput.value = '';
+            if (clearSearchBtn) clearSearchBtn.classList.add('hidden');
+
             const store = getCurrentStore();
 
             document.title = store.title;
@@ -688,10 +791,125 @@
             }
 
             renderStoreTabs();
+            renderCategoryNav();
             renderMenu();
             updateOrderUI();
             safeIcons();
         };
+
+        // 清除搜尋框
+        window.clearMenuSearch = function() {
+            currentSearchQuery = '';
+            if (menuSearchInput) menuSearchInput.value = '';
+            if (clearSearchBtn) clearSearchBtn.classList.add('hidden');
+            renderMenu();
+            updateOrderUI();
+            safeIcons();
+        };
+
+        // 手機版一鍵平滑捲動至明細區
+        window.scrollToOrderSummary = function() {
+            const target = document.getElementById('order-summary-section');
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        };
+
+        // 點擊分類膠囊平滑捲動至對應區塊（若該分類被摺疊則自動展開）
+        window.scrollToCategory = function(catIndex) {
+            activeCategoryIndex = catIndex;
+            const collapseKey = `${currentStoreId}_${catIndex}`;
+            if (collapsedCategories[collapseKey]) {
+                collapsedCategories[collapseKey] = false;
+                renderMenu();
+                updateOrderUI();
+                safeIcons();
+            }
+
+            renderCategoryNav();
+
+            const targetEl = document.getElementById(`cat-section-${catIndex}`);
+            if (targetEl) {
+                const headerOffset = window.innerWidth >= 640 ? 168 : 162;
+                const elementPosition = targetEl.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                window.scrollTo({
+                    top: Math.max(0, offsetPosition),
+                    behavior: 'smooth'
+                });
+            }
+        };
+
+        // 切換單一分類的展開/收合
+        window.toggleCategoryCollapse = function(catIndex) {
+            const key = `${currentStoreId}_${catIndex}`;
+            collapsedCategories[key] = !collapsedCategories[key];
+            renderMenu();
+            updateOrderUI();
+            safeIcons();
+        };
+
+        // 捲動時自動同步上方分類膠囊的高亮狀態
+        function handleScrollSpy() {
+            if (currentSearchQuery) return;
+            const store = getCurrentStore();
+            const threshold = window.innerWidth >= 640 ? 190 : 185;
+            let detectedIndex = 0;
+
+            store.menu.forEach((_, idx) => {
+                const el = document.getElementById(`cat-section-${idx}`);
+                if (el) {
+                    const rect = el.getBoundingClientRect();
+                    if (rect.top <= threshold) {
+                        detectedIndex = idx;
+                    }
+                }
+            });
+
+            if (detectedIndex !== activeCategoryIndex) {
+                activeCategoryIndex = detectedIndex;
+                renderCategoryNav();
+            }
+        }
+
+        // 渲染橫向分類快速跳轉膠囊列
+        function renderCategoryNav() {
+            if (!categoryNavPills) return;
+            const store = getCurrentStore();
+            const orderList = getCurrentOrderList();
+
+            // 搜尋狀態下隱藏分類錨點列，聚焦顯示搜尋結果
+            if (currentSearchQuery) {
+                categoryNavPills.classList.add('hidden');
+                return;
+            }
+            categoryNavPills.classList.remove('hidden');
+            categoryNavPills.innerHTML = '';
+
+            store.menu.forEach((group, idx) => {
+                // 計算該分類目前已點幾份
+                const catItemNames = new Set(group.items.map(i => typeof i === 'string' ? i : i.name));
+                const catOrderedQty = orderList
+                    .filter(o => catItemNames.has(o.name))
+                    .reduce((sum, o) => sum + o.qty, 0);
+
+                const isActive = idx === activeCategoryIndex;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.onclick = () => scrollToCategory(idx);
+                btn.className = isActive
+                    ? 'flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500 text-slate-950 text-xs font-bold shadow-sm transition shrink-0'
+                    : 'flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-600 text-xs font-medium hover:border-amber-400 hover:text-slate-900 transition shrink-0';
+
+                const countBadge = catOrderedQty > 0
+                    ? `<span class="px-1.5 py-0.2 rounded-full text-[11px] font-bold ${isActive ? 'bg-slate-900 text-amber-400' : 'bg-amber-100 text-amber-800'}">${catOrderedQty}</span>`
+                    : `<span class="text-[11px] opacity-60">(${group.items.length})</span>`;
+
+                btn.innerHTML = `<span>${group.category}</span>${countBadge}`;
+                categoryNavPills.appendChild(btn);
+            });
+        }
 
         function renderStoreTabs() {
             // 獨立模式下隱藏頂部餐廳切換列，避免誤觸切換到其他店家
@@ -730,77 +948,114 @@
         function renderMenu() {
             const store = getCurrentStore();
             menuContainer.innerHTML = '';
+            renderCategoryNav();
 
-            store.menu.forEach(group => {
+            const keyword = currentSearchQuery.toLowerCase();
+            let totalMatchedItems = 0;
+
+            store.menu.forEach((group, catIndex) => {
+                // 若有搜尋關鍵字，過濾該分類符合的品項
+                const filteredItems = keyword
+                    ? group.items.filter(itemObj => {
+                        const name = typeof itemObj === 'string' ? itemObj : itemObj.name;
+                        return name.toLowerCase().includes(keyword);
+                    })
+                    : group.items;
+
+                if (filteredItems.length === 0) return;
+                totalMatchedItems += filteredItems.length;
+
+                const isCollapsed = !keyword && Boolean(collapsedCategories[`${currentStoreId}_${catIndex}`]);
+
                 const section = document.createElement('section');
-                section.className = 'bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5';
+                section.id = `cat-section-${catIndex}`;
+                section.className = 'bg-white rounded-2xl shadow-sm border border-slate-200 p-3.5 sm:p-5 transition-all';
 
                 const headerHtml = `
-                    <div class="flex items-center gap-2 mb-4 pb-2.5 border-b border-slate-100">
-                        <div class="p-1.5 rounded-lg ${group.bgBadge} ${group.color}">
-                            <i data-lucide="${group.icon}" class="w-5 h-5"></i>
+                    <button 
+                        type="button" 
+                        onclick="toggleCategoryCollapse(${catIndex})"
+                        class="w-full flex items-center justify-between ${isCollapsed ? '' : 'mb-3.5 pb-2.5 border-b border-slate-100'} text-left group"
+                    >
+                        <div class="flex items-center gap-2">
+                            <div class="p-1.5 rounded-lg ${group.bgBadge} ${group.color}">
+                                <i data-lucide="${group.icon}" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                            </div>
+                            <h3 class="font-bold text-base sm:text-lg text-slate-800">${group.category}</h3>
+                            <span class="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">${filteredItems.length} 項</span>
                         </div>
-                        <h3 class="font-bold text-base sm:text-lg text-slate-800">${group.category}</h3>
-                    </div>
+                        <div class="flex items-center gap-1 text-xs text-slate-400 group-hover:text-slate-700 transition">
+                            <span>${isCollapsed ? '展開' : '收合'}</span>
+                            <i data-lucide="${isCollapsed ? 'chevron-down' : 'chevron-up'}" class="w-4 h-4"></i>
+                        </div>
+                    </button>
                 `;
 
-                const grid = document.createElement('div');
-                grid.className = 'grid grid-cols-1 sm:grid-cols-2 gap-3';
-
-                group.items.forEach(itemObj => {
-                    const itemName = typeof itemObj === 'string' ? itemObj : itemObj.name;
-                    const isCustomizable = Boolean(group.customizable || (typeof itemObj === 'object' && itemObj.customizable));
-
-                    const card = document.createElement('div');
-                    card.className = 'flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-amber-300 hover:shadow-sm transition-all duration-150 gap-2';
-                    card.dataset.itemCard = itemName;
-
-                    const customBtnHtml = isCustomizable
-                        ? `<button 
-                                type="button" 
-                                onclick="openCustomModal('${itemName}')"
-                                class="px-2 py-1 rounded-lg border border-amber-300 bg-amber-50 text-amber-800 text-xs font-bold hover:bg-amber-100 active:scale-95 transition shrink-0"
-                                title="客製化醋或沙茶"
-                           >客製</button>`
-                        : '';
-
-                    card.innerHTML = `
-                        <div class="flex items-center gap-1.5 min-w-0">
-                            <span class="font-medium text-slate-800 text-sm sm:text-base select-none truncate">${itemName}</span>
-                            ${customBtnHtml}
-                        </div>
-                        <div class="flex items-center gap-1.5 shrink-0">
-                            <button 
-                                type="button" 
-                                onclick="changeQuantity('${itemName}', -1)"
-                                class="w-9 h-9 rounded-lg border border-slate-300 bg-white text-slate-600 flex items-center justify-center hover:bg-slate-100 active:scale-90 transition disabled:opacity-30 disabled:pointer-events-none select-none"
-                                data-minus-btn="${itemName}"
-                                disabled
-                                aria-label="減少 ${itemName}"
-                            >
-                                <i data-lucide="minus" class="w-4 h-4"></i>
-                            </button>
-                            <span 
-                                class="w-6 text-center font-bold text-sm text-slate-700 select-none" 
-                                data-qty-display="${itemName}"
-                            >0</span>
-                            <button 
-                                type="button" 
-                                onclick="changeQuantity('${itemName}', 1)"
-                                class="w-9 h-9 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center hover:bg-amber-400 active:scale-90 transition shadow-sm select-none"
-                                aria-label="增加 ${itemName}"
-                            >
-                                <i data-lucide="plus" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    `;
-                    grid.appendChild(card);
-                });
-
                 section.innerHTML = headerHtml;
-                section.appendChild(grid);
+
+                if (!isCollapsed) {
+                    const grid = document.createElement('div');
+                    grid.className = 'grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3';
+
+                    filteredItems.forEach(itemObj => {
+                        const itemName = typeof itemObj === 'string' ? itemObj : itemObj.name;
+                        const isCustomizable = Boolean(group.customizable || (typeof itemObj === 'object' && itemObj.customizable));
+
+                        const card = document.createElement('div');
+                        card.className = 'flex items-center justify-between px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-amber-300 hover:shadow-sm transition-all duration-150 gap-2';
+                        card.dataset.itemCard = itemName;
+
+                        const customBtnHtml = isCustomizable
+                            ? `<button 
+                                    type="button" 
+                                    onclick="openCustomModal('${itemName}')"
+                                    class="px-2 py-1 rounded-lg border border-amber-300 bg-amber-50 text-amber-800 text-xs font-bold hover:bg-amber-100 active:scale-95 transition shrink-0"
+                                    title="客製化醋或沙茶"
+                               >客製</button>`
+                            : '';
+
+                        card.innerHTML = `
+                            <div class="flex items-center gap-1.5 min-w-0">
+                                <span class="font-medium text-slate-800 text-sm sm:text-base select-none truncate">${itemName}</span>
+                                ${customBtnHtml}
+                            </div>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <button 
+                                    type="button" 
+                                    onclick="changeQuantity('${itemName}', -1)"
+                                    class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-slate-300 bg-white text-slate-600 flex items-center justify-center hover:bg-slate-100 active:scale-90 transition disabled:opacity-30 disabled:pointer-events-none select-none"
+                                    data-minus-btn="${itemName}"
+                                    disabled
+                                    aria-label="減少 ${itemName}"
+                                >
+                                    <i data-lucide="minus" class="w-4 h-4"></i>
+                                </button>
+                                <span 
+                                    class="w-6 text-center font-bold text-sm text-slate-700 select-none" 
+                                    data-qty-display="${itemName}"
+                                >0</span>
+                                <button 
+                                    type="button" 
+                                    onclick="changeQuantity('${itemName}', 1)"
+                                    class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center hover:bg-amber-400 active:scale-90 transition shadow-sm select-none"
+                                    aria-label="增加 ${itemName}"
+                                >
+                                    <i data-lucide="plus" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+
+                    section.appendChild(grid);
+                }
+
                 menuContainer.appendChild(section);
             });
+
+            if (searchEmptyState) {
+                searchEmptyState.classList.toggle('hidden', totalMatchedItems > 0);
+            }
         }
 
         // ==========================================
@@ -1017,9 +1272,18 @@
                 }
             });
 
-            // 2. 計算當前餐廳總份數
+            // 2. 計算當前餐廳總份數並同步更新分類膠囊徽章與手機底部懸浮列
             const totalQty = orderList.reduce((sum, item) => sum + item.qty, 0);
             totalCountBadge.textContent = `共 ${totalQty} 份`;
+            renderCategoryNav();
+
+            if (mobileBarSummary) {
+                if (totalQty === 0) {
+                    mobileBarSummary.textContent = '尚未選擇餐點';
+                } else {
+                    mobileBarSummary.textContent = `已點 ${orderList.length} 種品項，共 ${totalQty} 份`;
+                }
+            }
 
             // 3. 更新右側互動明細列表
             if (orderList.length === 0) {
@@ -1179,11 +1443,11 @@
 
         function showToast(message) {
             toastMsgEl.textContent = message;
-            toastEl.classList.remove('translate-y-20', 'opacity-0');
+            toastEl.classList.remove('translate-y-24', 'opacity-0');
             
             if (toastTimeout) clearTimeout(toastTimeout);
             toastTimeout = setTimeout(() => {
-                toastEl.classList.add('translate-y-20', 'opacity-0');
+                toastEl.classList.add('translate-y-24', 'opacity-0');
             }, 2500);
         }
 

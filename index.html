@@ -50,7 +50,7 @@
                 <h1 class="text-xl font-bold tracking-tight text-slate-900">香村簡易點餐系統</h1>
             </div>
             <div class="text-sm text-slate-500 hidden sm:block">
-                點擊「+」加入餐點，系統將依點餐順序自動整理明細
+                點擊「+」加入餐點，系統將依菜單順序自動整理明細
             </div>
         </div>
     </header>
@@ -71,7 +71,7 @@
                     <div class="p-4 sm:p-5 bg-slate-900 text-white flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <i data-lucide="receipt" class="w-5 h-5 text-amber-400"></i>
-                            <h2 class="font-bold text-lg">點餐明細（依點餐順序）</h2>
+                            <h2 class="font-bold text-lg">點餐明細（依菜單順序）</h2>
                         </div>
                         <span id="total-count-badge" class="bg-amber-500 text-slate-950 text-xs font-bold px-2.5 py-1 rounded-full">
                             共 0 份
@@ -159,11 +159,9 @@
                 bgBadge: "bg-rose-50",
                 items: [
                     "韓式泡菜鍋",
-                    "海鮮豆腐鍋",
                     "沙茶牛肉鍋",
-                    "沙茶羊肉鍋",
-                    "經典泡菜鍋",
                     "沙茶豬肉鍋",
+                    "經典泡菜鍋",
                     "單點白飯"
                 ]
             },
@@ -174,7 +172,7 @@
                 bgBadge: "bg-amber-50",
                 items: [
                     "沙茶牛肉炒飯",
-                    "沙茶豬肉炒饭",
+                    "沙茶豬肉炒飯",
                     "泡菜炒飯",
                     "鹹豬肉炒飯",
                     "蒜香炒飯",
@@ -209,10 +207,14 @@
         ];
 
         // ==========================================
-        // 2. 狀態管理
-        // 使用陣列儲存點餐項目，確保嚴格遵守「依序點餐」的順序
-        // 格式: [{ name: '韓式泡菜鍋', qty: 1 }, ...]
+        // 2. 狀態管理與菜單索引建立
+        // 建立餐點名稱對應菜單原始順序的 Map (時間複雜度 O(1) 查詢)
         // ==========================================
+        const MENU_ORDER_MAP = new Map();
+        MENU_DATA.flatMap(group => group.items).forEach((name, index) => {
+            MENU_ORDER_MAP.set(name, index);
+        });
+
         let orderList = [];
         let toastTimeout = null;
 
@@ -322,8 +324,9 @@
                         orderList[existingIndex].qty = newQty;
                     }
                 } else if (delta > 0) {
-                    // 新點品項，推入陣列尾端以保留「點餐順序」
+                    // 新點品項加入陣列，並依照 MENU_DATA 的原始索引重新排序
                     orderList.push({ name: itemName, qty: delta });
+                    orderList.sort((a, b) => (MENU_ORDER_MAP.get(a.name) ?? 999) - (MENU_ORDER_MAP.get(b.name) ?? 999));
                 }
 
                 updateOrderUI();

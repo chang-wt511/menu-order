@@ -40,11 +40,11 @@
 </head>
 <body class="text-slate-800 antialiased min-h-screen flex flex-col">
 
-    <!-- 頂部導覽列與餐廳切換頁籤 (方案 A：單頁式切換) -->
+    <!-- 頂部導覽列與餐廳切換頁籤 -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
-            <!-- 動態餐廳標題 -->
-            <div class="flex items-center justify-between">
+            <!-- 動態餐廳標題與獨立網址分享按鈕 -->
+            <div class="flex items-center justify-between gap-3">
                 <div class="flex items-center gap-2.5">
                     <div class="bg-amber-500 text-white p-2 rounded-xl shadow-sm">
                         <i data-lucide="utensils" class="w-5 h-5"></i>
@@ -53,9 +53,18 @@
                         香村簡易點餐系統
                     </h1>
                 </div>
+                <button
+                    type="button"
+                    onclick="copyStoreUrl()"
+                    class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-600 text-xs font-medium hover:bg-slate-100 hover:text-slate-900 active:scale-95 transition shrink-0"
+                    title="複製此餐廳的專屬獨立網址"
+                >
+                    <i data-lucide="link" class="w-3.5 h-3.5 text-amber-600"></i>
+                    <span>複製獨立網址</span>
+                </button>
             </div>
 
-            <!-- 餐廳切換頁籤容器 (各自獨立保存點餐狀態) -->
+            <!-- 餐廳切換頁籤容器 (獨立模式下自動隱藏) -->
             <nav id="store-tabs" class="flex items-center gap-2 overflow-x-auto pb-0.5 sm:pb-0" aria-label="餐廳選擇">
                 <!-- 頁籤將透過 JavaScript 動態渲染 -->
             </nav>
@@ -91,7 +100,7 @@
                         <div id="empty-state" class="py-10 text-center text-slate-400 flex flex-col items-center justify-center">
                             <i data-lucide="clipboard-list" class="w-12 h-12 mb-3 text-slate-300 stroke-[1.5]"></i>
                             <p class="text-sm font-medium text-slate-500">尚未選擇任何餐點</p>
-                            <p class="text-xs mt-1">請從左側菜單點擊「+」開始點餐</p>
+                            <p class="text-xs mt-1">請從左側菜單點擊「+」或「客製」開始點餐</p>
                         </div>
                         
                         <!-- 訂單項目列表 -->
@@ -154,74 +163,139 @@
         </div>
     </div>
 
+    <!-- 單一品項客製化彈窗 Modal (三寶麵線專用：醋、沙茶) -->
+    <div id="custom-modal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <!-- Modal 標題 -->
+            <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
+                <div>
+                    <span class="text-xs text-amber-400 font-semibold block">單品口味客製化</span>
+                    <h3 id="modal-item-title" class="text-lg font-bold mt-0.5">大腸麵線(大)</h3>
+                </div>
+                <button type="button" onclick="closeCustomModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Modal 選項內容 -->
+            <div class="p-5 space-y-5">
+                <!-- 醋選項 -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">黑醋調整</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" class="opt-btn py-2.5 px-3 rounded-xl border text-sm font-medium transition" data-group="vinegar" data-val="">正常</button>
+                        <button type="button" class="opt-btn py-2.5 px-3 rounded-xl border text-sm font-medium transition" data-group="vinegar" data-val="醋多">醋多</button>
+                        <button type="button" class="opt-btn py-2.5 px-3 rounded-xl border text-sm font-medium transition" data-group="vinegar" data-val="不要醋">不要醋</button>
+                    </div>
+                </div>
+
+                <!-- 沙茶選項 -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">沙茶調整</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" class="opt-btn py-2.5 px-3 rounded-xl border text-sm font-medium transition" data-group="shacha" data-val="">正常</button>
+                        <button type="button" class="opt-btn py-2.5 px-3 rounded-xl border text-sm font-medium transition" data-group="shacha" data-val="沙茶多">沙茶多</button>
+                        <button type="button" class="opt-btn py-2.5 px-3 rounded-xl border text-sm font-medium transition" data-group="shacha" data-val="不要沙茶">不要沙茶</button>
+                    </div>
+                </div>
+
+                <!-- 份數調整 -->
+                <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+                    <span class="text-sm font-bold text-slate-700">此客製口味份數</span>
+                    <div class="flex items-center gap-3">
+                        <button type="button" onclick="changeModalQty(-1)" class="w-9 h-9 rounded-lg border border-slate-300 bg-white text-slate-700 flex items-center justify-center hover:bg-slate-100 active:scale-90 transition">
+                            <i data-lucide="minus" class="w-4 h-4"></i>
+                        </button>
+                        <span id="modal-qty-display" class="w-6 text-center font-bold text-base text-slate-900">1</span>
+                        <button type="button" onclick="changeModalQty(1)" class="w-9 h-9 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center hover:bg-amber-400 active:scale-90 transition">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal 底部按鈕 -->
+            <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button type="button" onclick="closeCustomModal()" class="px-4 py-2 rounded-xl border border-slate-300 bg-white text-slate-600 text-sm font-medium hover:bg-slate-100 transition">
+                    取消
+                </button>
+                <button type="button" onclick="confirmCustomOrder()" class="px-5 py-2 rounded-xl bg-amber-500 text-slate-950 text-sm font-bold hover:bg-amber-400 shadow-sm transition">
+                    確認加入
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ==========================================
-        // 1. 多餐廳菜單資料庫 (未來新增餐廳只需在此陣列新增物件)
+        // 1. 多餐廳菜單資料庫 (設定專屬數字代碼 paramCode：香村=1, 三寶麵線=3)
         // ==========================================
         const STORES_DATA = [
             {
                 id: "xiangcun",
+                paramCode: "1",
                 shortName: "香村",
                 title: "香村簡易點餐系統",
                 menu: [
-            {
-                category: "火鍋",
-                icon: "flame",
-                color: "text-rose-500",
-                bgBadge: "bg-rose-50",
-                items: [
-                    "韓式泡菜鍋",
-                    "海鮮豆腐鍋",
-                    "沙茶牛肉鍋",
-                    "沙茶羊肉鍋",
-                    "經典泡菜鍋",
-                    "沙茶豬肉鍋",
-                    "單點白飯"
+                    {
+                        category: "火鍋",
+                        icon: "flame",
+                        color: "text-rose-500",
+                        bgBadge: "bg-rose-50",
+                        items: [
+                            "韓式泡菜鍋",
+                            "海鮮豆腐鍋",
+                            "沙茶牛肉鍋",
+                            "沙茶羊肉鍋",
+                            "經典泡菜鍋",
+                            "沙茶豬肉鍋",
+                            "單點白飯"
+                        ]
+                    },
+                    {
+                        category: "炒飯",
+                        icon: "utensils-crossed",
+                        color: "text-amber-600",
+                        bgBadge: "bg-amber-50",
+                        items: [
+                            "沙茶牛肉炒飯",
+                            "沙茶豬肉炒飯",
+                            "泡菜炒飯",
+                            "鹹豬肉炒飯",
+                            "蒜香炒飯",
+                            "蝦仁炒飯"
+                        ]
+                    },
+                    {
+                        category: "炒麵",
+                        icon: "soup",
+                        color: "text-orange-500",
+                        bgBadge: "bg-orange-50",
+                        items: [
+                            "沙茶牛肉炒麵",
+                            "沙茶豬肉炒麵",
+                            "海鮮炒麵",
+                            "麻油手工麵線"
+                        ]
+                    },
+                    {
+                        category: "湯品",
+                        icon: "cup-soda",
+                        color: "text-emerald-600",
+                        bgBadge: "bg-emerald-50",
+                        items: [
+                            "蚵仔湯",
+                            "薑絲蛤蜊湯",
+                            "貢丸湯",
+                            "紫菜蛋花湯",
+                            "豆腐湯"
+                        ]
+                    }
                 ]
-            },
-            {
-                category: "炒飯",
-                icon: "utensils-crossed",
-                color: "text-amber-600",
-                bgBadge: "bg-amber-50",
-                items: [
-                    "沙茶牛肉炒飯",
-                    "沙茶豬肉炒饭",
-                    "泡菜炒飯",
-                    "鹹豬肉炒飯",
-                    "蒜香炒飯",
-                    "蝦仁炒飯"
-                ]
-            },
-            {
-                category: "炒麵",
-                icon: "soup",
-                color: "text-orange-500",
-                bgBadge: "bg-orange-50",
-                items: [
-                    "沙茶牛肉炒麵",
-                    "沙茶豬肉炒麵",
-                    "海鮮炒麵",
-                    "麻油手工麵線"
-                ]
-            },
-            {
-                category: "湯品",
-                icon: "cup-soda",
-                color: "text-emerald-600",
-                bgBadge: "bg-emerald-50",
-                items: [
-                    "蚵仔湯",
-                    "薑絲蛤蜊湯",
-                    "貢丸湯",
-                    "紫菜蛋花湯",
-                    "豆腐湯"
-                ]
-            }
-        ]
             },
             {
                 id: "sanbao",
+                paramCode: "3",
                 shortName: "三寶麵線",
                 title: "三寶麵線簡易點餐系統",
                 menu: [
@@ -230,6 +304,7 @@
                         icon: "soup",
                         color: "text-amber-600",
                         bgBadge: "bg-amber-50",
+                        customizable: true, // 整類開啟醋/沙茶客製化
                         items: [
                             "大腸麵線(大)",
                             "大腸麵線(小)",
@@ -249,11 +324,11 @@
                         color: "text-orange-500",
                         bgBadge: "bg-orange-50",
                         items: [
-                            "香菇肉羹麵",
-                            "香菇肉羹飯",
-                            "香菇肉羹米粉",
-                            "香菇肉羹湯(大)",
-                            "香菇肉羹湯(小)",
+                            { name: "香菇肉羹麵", customizable: true },
+                            { name: "香菇肉羹飯", customizable: true },
+                            { name: "香菇肉羹米粉", customizable: true },
+                            { name: "香菇肉羹湯(大)", customizable: true },
+                            { name: "香菇肉羹湯(小)", customizable: true },
                             "滷肉飯(大)",
                             "滷肉飯(小)"
                         ]
@@ -280,7 +355,8 @@
         // 2. 狀態管理與多店獨立儲存空間
         // ==========================================
         let currentStoreId = STORES_DATA[0].id;
-        
+        let isSoloMode = false;
+
         // 為每家餐廳建立獨立的訂單陣列與菜單順序索引 Map
         const storeOrders = {};     // 格式: { xiangcun: [...], sanbao: [...] }
         const storeOrderMaps = {};  // 格式: { xiangcun: Map, sanbao: Map }
@@ -288,13 +364,23 @@
         STORES_DATA.forEach(store => {
             storeOrders[store.id] = [];
             const orderMap = new Map();
-            store.menu.flatMap(group => group.items).forEach((name, index) => {
+            store.menu.flatMap(group => group.items).forEach((itemObj, index) => {
+                const name = typeof itemObj === 'string' ? itemObj : itemObj.name;
                 orderMap.set(name, index);
             });
             storeOrderMaps[store.id] = orderMap;
         });
 
         let toastTimeout = null;
+
+        // 客製化彈窗狀態
+        let modalState = {
+            editingOrderId: null, // 若為 null 代表新增，若有值代表編輯既有明細列
+            itemName: '',
+            vinegar: '',
+            shacha: '',
+            qty: 1
+        };
 
         // ==========================================
         // 3. DOM 元素參照
@@ -310,8 +396,10 @@
         const clearBtn = document.getElementById('clear-btn');
         const toastEl = document.getElementById('toast');
         const toastMsgEl = document.getElementById('toast-message');
+        const customModal = document.getElementById('custom-modal');
+        const modalItemTitle = document.getElementById('modal-item-title');
+        const modalQtyDisplay = document.getElementById('modal-qty-display');
 
-        // 取得目前啟用中的餐廳物件與訂單陣列
         function getCurrentStore() {
             return STORES_DATA.find(s => s.id === currentStoreId) || STORES_DATA[0];
         }
@@ -320,45 +408,82 @@
             return storeOrders[currentStoreId];
         }
 
+        // 依據網址參數或 Hash 解析目標餐廳（支援 ?store=1、?store=3、?s=1、#1、#3 或原本的 id）
+        function resolveStoreFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const rawParam = urlParams.get('store') || urlParams.get('s') || window.location.hash.replace('#', '');
+            if (!rawParam) return null;
+
+            const matched = STORES_DATA.find(s => s.paramCode === rawParam || s.id === rawParam);
+            return matched ? matched.id : null;
+        }
+
         // ==========================================
         // 4. 初始化與渲染函數
         // ==========================================
         function init() {
-            // 支援透過網址參數 (?store=sanbao) 或 Hash (#sanbao) 指定預設開啟的餐廳
             const urlParams = new URLSearchParams(window.location.search);
-            const storeParam = urlParams.get('store');
-            const hashParam = window.location.hash.replace('#', '');
-            const targetStore = storeParam || hashParam;
+            const targetStoreId = resolveStoreFromUrl();
 
-            if (targetStore && STORES_DATA.some(s => s.id === targetStore)) {
-                currentStoreId = targetStore;
+            // 當網址帶有指定餐廳參數（如 ?store=1 或 ?store=3）或明確指定 ?solo=1 時，預設啟用獨立模式；若 ?solo=0 則強制顯示切換列
+            const soloParam = urlParams.get('solo');
+            if (soloParam === '0') {
+                isSoloMode = false;
+            } else if (soloParam === '1' || targetStoreId !== null) {
+                isSoloMode = true;
+            }
+
+            if (targetStoreId) {
+                currentStoreId = targetStoreId;
+            }
+
+            // 監聽瀏覽器上一頁 / 下一頁或手動修改 Hash
+            window.addEventListener('hashchange', () => {
+                const nextStoreId = resolveStoreFromUrl();
+                if (nextStoreId && nextStoreId !== currentStoreId) {
+                    switchStore(nextStoreId, false);
+                }
+            });
+
+            // 綁定彈窗選項按鈕點擊事件
+            document.querySelectorAll('.opt-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const group = btn.dataset.group;
+                    const val = btn.dataset.val;
+                    modalState[group] = val;
+                    updateModalButtonsUI();
+                });
+            });
+
+            // 點擊 Modal 背景關閉
+            if (customModal) {
+                customModal.addEventListener('click', (e) => {
+                    if (e.target === customModal) closeCustomModal();
+                });
             }
 
             switchStore(currentStoreId, false);
 
-            // 綁定全域按鈕事件
             copyBtn.addEventListener('click', copyOrderToClipboard);
             clearBtn.addEventListener('click', clearAllOrders);
         }
 
-        // 切換餐廳分頁
         window.switchStore = function(storeId, updateUrl = true) {
             currentStoreId = storeId;
             const store = getCurrentStore();
 
-            // 更新網頁與頂部標題
             document.title = store.title;
             headerTitle.textContent = store.title;
 
-            // 使用 Hash 更新網址並加上 try/catch，避免在 blob: 預覽環境或沙盒 iFrame 觸發 SecurityError
             if (updateUrl) {
                 try {
                     if (window.location.protocol !== 'blob:') {
-                        window.location.hash = storeId;
+                        // 同步更新網址參數與 Hash 為數字代碼 (1 或 3)
+                        const url = new URL(window.location.href);
+                        url.searchParams.set('store', store.paramCode);
+                        window.history.replaceState({}, '', url.toString());
                     }
-                } catch (e) {
-                    // 忽略受限預覽環境的網址修改限制
-                }
+                } catch (e) {}
             }
 
             renderStoreTabs();
@@ -367,8 +492,13 @@
             lucide.createIcons();
         };
 
-        // 渲染頂部餐廳切換頁籤 (含各店目前點餐份數小徽章)
         function renderStoreTabs() {
+            // 獨立模式下隱藏頂部餐廳切換列，避免誤觸切換到其他店家
+            if (isSoloMode) {
+                storeTabs.classList.add('hidden');
+                return;
+            }
+            storeTabs.classList.remove('hidden');
             storeTabs.innerHTML = '';
 
             STORES_DATA.forEach(store => {
@@ -404,7 +534,6 @@
                 const section = document.createElement('section');
                 section.className = 'bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5';
 
-                // 分類標題
                 const headerHtml = `
                     <div class="flex items-center gap-2 mb-4 pb-2.5 border-b border-slate-100">
                         <div class="p-1.5 rounded-lg ${group.bgBadge} ${group.color}">
@@ -414,18 +543,32 @@
                     </div>
                 `;
 
-                // 餐點網格
                 const grid = document.createElement('div');
                 grid.className = 'grid grid-cols-1 sm:grid-cols-2 gap-3';
 
-                group.items.forEach(itemName => {
+                group.items.forEach(itemObj => {
+                    const itemName = typeof itemObj === 'string' ? itemObj : itemObj.name;
+                    const isCustomizable = Boolean(group.customizable || (typeof itemObj === 'object' && itemObj.customizable));
+
                     const card = document.createElement('div');
-                    card.className = 'flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-amber-300 hover:shadow-sm transition-all duration-150';
+                    card.className = 'flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-amber-300 hover:shadow-sm transition-all duration-150 gap-2';
                     card.dataset.itemCard = itemName;
 
+                    const customBtnHtml = isCustomizable
+                        ? `<button 
+                                type="button" 
+                                onclick="openCustomModal('${itemName}')"
+                                class="px-2 py-1 rounded-lg border border-amber-300 bg-amber-50 text-amber-800 text-xs font-bold hover:bg-amber-100 active:scale-95 transition shrink-0"
+                                title="客製化醋或沙茶"
+                           >客製</button>`
+                        : '';
+
                     card.innerHTML = `
-                        <span class="font-medium text-slate-800 text-sm sm:text-base select-none">${itemName}</span>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-1.5 min-w-0">
+                            <span class="font-medium text-slate-800 text-sm sm:text-base select-none truncate">${itemName}</span>
+                            ${customBtnHtml}
+                        </div>
+                        <div class="flex items-center gap-1.5 shrink-0">
                             <button 
                                 type="button" 
                                 onclick="changeQuantity('${itemName}', -1)"
@@ -460,43 +603,166 @@
         }
 
         // ==========================================
-        // 5. 核心點餐邏輯 (針對當前餐廳操作)
+        // 5. 客製化彈窗操作邏輯
+        // ==========================================
+        window.openCustomModal = function(itemName, editingOrderId = null) {
+            modalState.editingOrderId = editingOrderId;
+            modalState.itemName = itemName;
+
+            if (editingOrderId) {
+                const orderList = getCurrentOrderList();
+                const target = orderList.find(o => o.id === editingOrderId);
+                if (target) {
+                    const parts = target.note ? target.note.split('、') : [];
+                    modalState.vinegar = parts.find(p => p.includes('醋')) || '';
+                    modalState.shacha = parts.find(p => p.includes('沙茶')) || '';
+                    modalState.qty = target.qty;
+                }
+            } else {
+                modalState.vinegar = '';
+                modalState.shacha = '';
+                modalState.qty = 1;
+            }
+
+            modalItemTitle.textContent = itemName;
+            modalQtyDisplay.textContent = modalState.qty;
+            updateModalButtonsUI();
+            customModal.classList.remove('hidden');
+            lucide.createIcons();
+        };
+
+        window.closeCustomModal = function() {
+            customModal.classList.add('hidden');
+        };
+
+        window.changeModalQty = function(delta) {
+            modalState.qty = Math.max(1, modalState.qty + delta);
+            modalQtyDisplay.textContent = modalState.qty;
+        };
+
+        function updateModalButtonsUI() {
+            document.querySelectorAll('.opt-btn').forEach(btn => {
+                const group = btn.dataset.group;
+                const val = btn.dataset.val;
+                const isSelected = modalState[group] === val;
+
+                if (isSelected) {
+                    btn.className = 'opt-btn py-2.5 px-3 rounded-xl border-2 border-amber-500 bg-amber-50 text-amber-900 text-sm font-bold transition';
+                } else {
+                    btn.className = 'opt-btn py-2.5 px-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-sm font-medium hover:bg-slate-50 transition';
+                }
+            });
+        }
+
+        window.confirmCustomOrder = function() {
+            const notes = [];
+            if (modalState.vinegar) notes.push(modalState.vinegar);
+            if (modalState.shacha) notes.push(modalState.shacha);
+            const noteStr = notes.join('、');
+
+            const orderList = getCurrentOrderList();
+            const orderMap = storeOrderMaps[currentStoreId];
+
+            if (modalState.editingOrderId) {
+                // 編輯既有項目：先移除舊項目，再依新條件合併或插入
+                const oldIdx = orderList.findIndex(o => o.id === modalState.editingOrderId);
+                if (oldIdx > -1) orderList.splice(oldIdx, 1);
+            }
+
+            // 檢查是否已有「相同品名 + 相同客製備註」的項目，若有則自動合併數量
+            const sameItem = orderList.find(o => o.name === modalState.itemName && o.note === noteStr);
+            if (sameItem) {
+                sameItem.qty += modalState.qty;
+            } else {
+                orderList.push({
+                    id: 'ord_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                    name: modalState.itemName,
+                    note: noteStr,
+                    qty: modalState.qty
+                });
+            }
+
+            // 依照菜單原始順序排列
+            orderList.sort((a, b) => (orderMap.get(a.name) ?? 999) - (orderMap.get(b.name) ?? 999));
+
+            closeCustomModal();
+            renderStoreTabs();
+            updateOrderUI();
+        };
+
+        // ==========================================
+        // 6. 核心點餐邏輯 (針對當前餐廳操作)
         // ==========================================
         window.changeQuantity = function(itemName, delta) {
             try {
                 const orderList = getCurrentOrderList();
                 const orderMap = storeOrderMaps[currentStoreId];
-                const existingIndex = orderList.findIndex(item => item.name === itemName);
 
-                if (existingIndex > -1) {
-                    // 品項已在訂單中，更新數量
-                    const newQty = orderList[existingIndex].qty + delta;
-                    if (newQty <= 0) {
-                        orderList.splice(existingIndex, 1);
+                if (delta > 0) {
+                    // 快速按「+」預設加入無客製化（正常口味）項目
+                    const normalItem = orderList.find(item => item.name === itemName && !item.note);
+                    if (normalItem) {
+                        normalItem.qty += delta;
                     } else {
-                        orderList[existingIndex].qty = newQty;
+                        orderList.push({
+                            id: 'ord_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                            name: itemName,
+                            note: '',
+                            qty: delta
+                        });
+                        orderList.sort((a, b) => (orderMap.get(a.name) ?? 999) - (orderMap.get(b.name) ?? 999));
                     }
-                } else if (delta > 0) {
-                    // 新點品項加入陣列，並依照該店菜單的原始索引重新排序
-                    orderList.push({ name: itemName, qty: delta });
-                    orderList.sort((a, b) => (orderMap.get(a.name) ?? 999) - (orderMap.get(b.name) ?? 999));
+                } else {
+                    // 按「-」優先扣除正常口味；若無正常口味則從該品項最後一筆客製項目扣除
+                    let targetIndex = orderList.findIndex(item => item.name === itemName && !item.note);
+                    if (targetIndex === -1) {
+                        for (let i = orderList.length - 1; i >= 0; i--) {
+                            if (orderList[i].name === itemName) {
+                                targetIndex = i;
+                                break;
+                            }
+                        }
+                    }
+                    if (targetIndex > -1) {
+                        const newQty = orderList[targetIndex].qty + delta;
+                        if (newQty <= 0) {
+                            orderList.splice(targetIndex, 1);
+                        } else {
+                            orderList[targetIndex].qty = newQty;
+                        }
+                    }
                 }
 
-                renderStoreTabs(); // 更新分頁上的份數徽章
+                renderStoreTabs();
                 updateOrderUI();
             } catch (error) {
                 console.error('更新餐點數量時發生錯誤:', error);
             }
         };
 
-        // 移除單一品項
-        window.removeItem = function(itemName) {
-            storeOrders[currentStoreId] = getCurrentOrderList().filter(item => item.name !== itemName);
+        // 針對右側明細特定列調整數量
+        window.changeOrderRowQty = function(orderId, delta) {
+            const orderList = getCurrentOrderList();
+            const idx = orderList.findIndex(item => item.id === orderId);
+            if (idx === -1) return;
+
+            const newQty = orderList[idx].qty + delta;
+            if (newQty <= 0) {
+                orderList.splice(idx, 1);
+            } else {
+                orderList[idx].qty = newQty;
+            }
             renderStoreTabs();
             updateOrderUI();
         };
 
-        // 清空當前餐廳訂單
+        // 移除單一明細列
+        window.removeOrderRow = function(orderId) {
+            storeOrders[currentStoreId] = getCurrentOrderList().filter(item => item.id !== orderId);
+            renderStoreTabs();
+            updateOrderUI();
+        };
+
         function clearAllOrders() {
             const orderList = getCurrentOrderList();
             if (orderList.length === 0) return;
@@ -507,28 +773,40 @@
         }
 
         // ==========================================
-        // 6. 同步更新畫面 (菜單數量、右側明細、輸出文字)
+        // 7. 同步更新畫面 (菜單數量、右側明細、輸出文字)
         // ==========================================
+        function isItemCustomizableInCurrentStore(itemName) {
+            const store = getCurrentStore();
+            for (const group of store.menu) {
+                for (const item of group.items) {
+                    const name = typeof item === 'string' ? item : item.name;
+                    if (name === itemName) {
+                        return Boolean(group.customizable || (typeof item === 'object' && item.customizable));
+                    }
+                }
+            }
+            return false;
+        }
+
         function updateOrderUI() {
             const orderList = getCurrentOrderList();
 
-            // 1. 更新左側菜單上的數字與按鈕狀態
+            // 1. 更新左側菜單上的總份數（加總同品名所有客製組合）與按鈕狀態
             const allQtyDisplays = document.querySelectorAll('[data-qty-display]');
             allQtyDisplays.forEach(el => {
                 const name = el.dataset.qtyDisplay;
-                const found = orderList.find(item => item.name === name);
-                const qty = found ? found.qty : 0;
+                const totalForItem = orderList
+                    .filter(item => item.name === name)
+                    .reduce((sum, item) => sum + item.qty, 0);
                 
-                el.textContent = qty;
+                el.textContent = totalForItem;
                 
                 const minusBtn = document.querySelector(`[data-minus-btn="${name}"]`);
                 const card = document.querySelector(`[data-item-card="${name}"]`);
                 
-                if (minusBtn) {
-                    minusBtn.disabled = qty === 0;
-                }
+                if (minusBtn) minusBtn.disabled = totalForItem === 0;
                 if (card) {
-                    if (qty > 0) {
+                    if (totalForItem > 0) {
                         card.classList.add('border-amber-400', 'bg-amber-50/40');
                         card.classList.remove('border-slate-200', 'bg-slate-50/50');
                     } else {
@@ -556,22 +834,36 @@
 
                 orderItemsList.innerHTML = '';
                 orderList.forEach((item, index) => {
+                    const canCustomize = isItemCustomizableInCurrentStore(item.name);
+                    const noteBadgeHtml = item.note
+                        ? `<span class="inline-block mt-0.5 text-xs font-semibold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md">${item.note}</span>`
+                        : '';
+                    const editBtnHtml = canCustomize
+                        ? `<button type="button" onclick="openCustomModal('${item.name}', '${item.id}')" class="text-slate-400 hover:text-amber-600 p-1 rounded-lg transition" title="調整客製口味"><i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i></button>`
+                        : '';
+
                     const li = document.createElement('li');
-                    li.className = 'flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-sm';
+                    li.className = 'flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-sm gap-2';
                     li.innerHTML = `
-                        <div class="flex items-center gap-2.5">
-                            <span class="w-5 h-5 rounded-full bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center shrink-0">
+                        <div class="flex items-start gap-2.5 min-w-0">
+                            <span class="w-5 h-5 mt-0.5 rounded-full bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center shrink-0">
                                 ${index + 1}
                             </span>
-                            <span class="font-medium text-slate-800">${item.name}</span>
+                            <div class="min-w-0">
+                                <div class="font-medium text-slate-800 truncate">${item.name}</div>
+                                ${noteBadgeHtml}
+                            </div>
                         </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                            <span class="font-bold text-amber-600 bg-amber-100/70 px-2 py-0.5 rounded-md">
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            ${editBtnHtml}
+                            <button type="button" onclick="changeOrderRowQty('${item.id}', -1)" class="w-6 h-6 rounded-md border border-slate-300 bg-white text-slate-600 flex items-center justify-center hover:bg-slate-100 text-xs font-bold">-</button>
+                            <span class="font-bold text-amber-600 bg-amber-100/70 px-2 py-0.5 rounded-md min-w-[2.2rem] text-center">
                                 x${item.qty}
                             </span>
+                            <button type="button" onclick="changeOrderRowQty('${item.id}', 1)" class="w-6 h-6 rounded-md border border-slate-300 bg-white text-slate-600 flex items-center justify-center hover:bg-slate-100 text-xs font-bold">+</button>
                             <button 
                                 type="button" 
-                                onclick="removeItem('${item.name}')" 
+                                onclick="removeOrderRow('${item.id}')" 
                                 class="text-slate-400 hover:text-rose-500 p-1 rounded-lg transition"
                                 title="刪除此品項"
                             >
@@ -588,7 +880,7 @@
             updateOutputText();
         }
 
-        // 固定輸出「品項 x數量」格式
+        // 固定輸出「品項 x數量」或「品項 x數量，客製備註」格式
         function updateOutputText() {
             const orderList = getCurrentOrderList();
             if (orderList.length === 0) {
@@ -596,12 +888,15 @@
                 return;
             }
 
-            const lines = orderList.map(item => `${item.name} x${item.qty}`);
+            const lines = orderList.map(item => {
+                const base = `${item.name} x${item.qty}`;
+                return item.note ? `${base}，${item.note}` : base;
+            });
             outputTextarea.value = lines.join('\n');
         }
 
         // ==========================================
-        // 7. 複製功能 (優先使用 Clipboard API 並保留相容備援)
+        // 8. 複製功能
         // ==========================================
         async function copyOrderToClipboard() {
             const orderList = getCurrentOrderList();
@@ -640,7 +935,47 @@
             }
         }
 
-        // 顯示底部提示訊息
+        // 複製目前餐廳的專屬獨立網址（自動帶入 ?store=1 或 ?store=3）
+        window.copyStoreUrl = async function() {
+            const store = getCurrentStore();
+            let shareUrl = '';
+
+            try {
+                if (window.location.protocol === 'blob:') {
+                    shareUrl = `?store=${store.paramCode}`;
+                } else {
+                    const url = new URL(window.location.href);
+                    url.search = `?store=${store.paramCode}`;
+                    url.hash = '';
+                    shareUrl = url.toString();
+                }
+
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(shareUrl);
+                    showToast(`已複製「${store.shortName}」專屬網址 (?store=${store.paramCode})`);
+                } else {
+                    copyRawTextFallback(shareUrl, `已複製「${store.shortName}」專屬網址 (?store=${store.paramCode})`);
+                }
+            } catch (err) {
+                copyRawTextFallback(shareUrl, `已複製「${store.shortName}」專屬網址`);
+            }
+        };
+
+        function copyRawTextFallback(text, successMsg) {
+            const tempInput = document.createElement('input');
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            tempInput.setSelectionRange(0, 99999);
+            try {
+                document.execCommand('copy');
+                showToast(successMsg);
+            } catch (e) {
+                showToast('複製失敗，請手動複製網址列');
+            }
+            document.body.removeChild(tempInput);
+        }
+
         function showToast(message) {
             toastMsgEl.textContent = message;
             toastEl.classList.remove('translate-y-20', 'opacity-0');
@@ -651,7 +986,6 @@
             }, 2500);
         }
 
-        // 啟動應用程式
         window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>

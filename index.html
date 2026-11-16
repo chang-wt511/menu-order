@@ -117,6 +117,12 @@
                         </button>
                     </div>
 
+                    <!-- 目前放入的袋別 -->
+                    <div class="flex items-center gap-2 text-xs">
+                        <span class="font-bold text-slate-500 shrink-0">放入：</span>
+                        <div id="bag-buttons" class="flex gap-1.5 overflow-x-auto no-scrollbar"></div>
+                    </div>
+
                     <!-- 橫向分類快速跳轉膠囊列 -->
                     <div id="category-nav-pills" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
                         <!-- 分類膠囊按鈕由 JS 動態產生 -->
@@ -468,10 +474,10 @@
                         color: "text-orange-500",
                         bgBadge: "bg-orange-50",
                         items: [
-                            "土魠魚麵",
-                            "土魠魚飯加蛋",
-                            "土魠魚米粉",
-                            "土魠魚冬粉"
+                            "土魠魚羹麵",
+                            "土魠魚羹飯加蛋",
+                            "土魠魚羹米粉",
+                            "土魠魚羹冬粉"
                         ]
                     },
                     {
@@ -913,7 +919,7 @@
                                 name: "珍珠餛飩麵",
                                 promptLabel: "請選擇口味",
                                 variants: [
-                                    { label: "原味", fullName: "珍珠餛飩湯麵" },
+                                    { label: "原味", fullName: "珍珠餛飩麵" },
                                     { label: "紹辣乾", fullName: "紹辣珍珠餛飩乾麵" },
                                     { label: "紹辣湯", fullName: "紹辣珍珠餛飩湯麵" }
                                 ]
@@ -1009,6 +1015,11 @@
                 }
             })));
         })();
+
+        // 分袋：預設放入「工廠」，可切換為其他袋別
+        const BAGS = ['工廠', '名間', '什麼綠'];
+        const BAG_STYLES = ['bg-sky-100 text-sky-800', 'bg-violet-100 text-violet-800', 'bg-emerald-100 text-emerald-800'];
+        let currentBag = 0;
 
         let currentStoreId = STORES_DATA[0].id;
         let isSoloMode = false;
@@ -1241,6 +1252,7 @@
 
         window.switchStore = function(storeId) {
             currentStoreId = storeId;
+            currentBag = 0; // 切換餐廳時回到預設袋別
             currentSearchQuery = '';
             activeCategoryIndex = 0;
 
@@ -1324,6 +1336,52 @@
             renderMenu();
             updateOrderUI();
             safeIcons();
+        };
+
+function getOrdersByBag(list) {
+            return [...list].sort((a, b) => a.bag - b.bag); // 穩定排序：袋內維持菜單順序
+        }
+
+        // 超過一袋、或唯一使用的袋別不是預設袋時，才顯示袋別標題
+        function bagHeaderNeeded(list) {
+            const used = new Set(list.map(o => o.bag));
+            return used.size > 1 || (used.size === 1 && !used.has(0));
+        }
+
+        function renderBagSwitcher() {
+            const box = document.getElementById('bag-buttons');
+            if (!box) return;
+            const list = getCurrentOrderList();
+            box.innerHTML = '';
+            BAGS.forEach((name, i) => {
+                const qty = list.filter(o => o.bag === i).reduce((sum, o) => sum + o.qty, 0);
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.onclick = () => { currentBag = i; renderBagSwitcher(); };
+                btn.className = 'shrink-0 px-3 py-1.5 rounded-full border text-xs font-bold transition ' + (i === currentBag
+                    ? 'border-amber-500 bg-amber-500 text-slate-950'
+                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50');
+                btn.textContent = qty ? `${name}（${qty}）` : name;
+                box.appendChild(btn);
+            });
+        }
+
+        // 點明細上的袋別標籤，輪流換到下一袋（同品項同備註會自動合併）
+        window.cycleOrderBag = function(orderId) {
+            const list = getCurrentOrderList();
+            const item = list.find(o => o.id === orderId);
+            if (!item) return;
+            item.bag = (item.bag + 1) % BAGS.length;
+            const cfg = findMenuItemConfig(item.name);
+            if (!(cfg && cfg.allowDuplicateEntries)) {
+                const dup = list.find(o => o !== item && o.name === item.name && o.note === item.note && o.bag === item.bag);
+                if (dup) {
+                    dup.qty += item.qty;
+                    storeOrders[currentStoreId] = list.filter(o => o !== item);
+                }
+            }
+            renderStoreTabs();
+            updateOrderUI();
         };
 
         function getStickyOffset() {
@@ -1656,16 +1714,18 @@
             const orderList = getCurrentOrderList();
             const orderMap = storeOrderMaps[currentStoreId];
 
+            let targetBag = currentBag; // 編輯既有明細時沿用原本的袋別
             if (modalState.editingOrderId) {
                 const oldIdx = orderList.findIndex(o => o.id === modalState.editingOrderId);
-                if (oldIdx > -1) orderList.splice(oldIdx, 1);
+                if (oldIdx > -1) { targetBag = orderList[oldIdx].bag; orderList.splice(oldIdx, 1); }
             }
 
-            const sameItem = orderList.find(o => o.name === modalState.itemName && o.note === noteStr);
+            const sameItem = orderList.find(o => o.name === modalState.itemName && o.note === noteStr && o.bag === targetBag);
             if (sameItem) {
                 sameItem.qty += modalState.qty;
             } else {
                 orderList.push({
+                    bag: targetBag,
                     id: 'ord_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
                     name: modalState.itemName,
                     note: noteStr,
@@ -1758,11 +1818,12 @@
             const orderList = getCurrentOrderList();
             const orderMap = storeOrderMaps[currentStoreId];
 
-            const existingItem = orderList.find(item => item.name === fullName && !item.note);
+            const existingItem = orderList.find(item => item.name === fullName && !item.note && item.bag === currentBag);
             if (existingItem) {
                 existingItem.qty += variantModalState.qty;
             } else {
                 orderList.push({
+                    bag: currentBag,
                     id: 'ord_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
                     name: fullName,
                     note: '',
@@ -1791,6 +1852,7 @@
                     if (allowDuplicate) {
                         // 水餃跟鍋貼：每次點「+」皆建立獨立一筆明細，且預設基數為 5 顆起跳
                         orderList.push({
+                    bag: currentBag,
                             id: 'ord_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
                             name: itemName,
                             note: '',
@@ -1799,11 +1861,12 @@
                         orderList.sort((a, b) => (orderMap.get(a.name) ?? 999) - (orderMap.get(b.name) ?? 999));
                     } else {
                         // 其他一般品項：相同品名自動累加數量
-                        const normalItem = orderList.find(item => item.name === itemName && !item.note);
+                        const normalItem = orderList.find(item => item.name === itemName && !item.note && item.bag === currentBag);
                         if (normalItem) {
                             normalItem.qty += delta;
                         } else {
                             orderList.push({
+                    bag: currentBag,
                                 id: 'ord_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
                                 name: itemName,
                                 note: '',
@@ -1817,13 +1880,13 @@
                     let targetIndex = -1;
                     if (allowDuplicate) {
                         for (let i = orderList.length - 1; i >= 0; i--) {
-                            if (orderList[i].name === itemName) {
+                            if (orderList[i].name === itemName && orderList[i].bag === currentBag) {
                                 targetIndex = i;
                                 break;
                             }
                         }
                     } else {
-                        targetIndex = orderList.findIndex(item => item.name === itemName && !item.note);
+                        targetIndex = orderList.findIndex(item => item.name === itemName && !item.note && item.bag === currentBag);
                         if (targetIndex === -1) {
                             for (let i = orderList.length - 1; i >= 0; i--) {
                                 if (orderList[i].name === itemName) {
@@ -1831,6 +1894,13 @@
                                     break;
                                 }
                             }
+                        }
+                    }
+
+                    // 目前這袋沒有時，改扣其他袋的同品項
+                    if (targetIndex === -1) {
+                        for (let i = orderList.length - 1; i >= 0; i--) {
+                            if (orderList[i].name === itemName) { targetIndex = i; break; }
                         }
                     }
 
@@ -1903,6 +1973,7 @@ let clearArmTimer = null;
         // ==========================================
         function updateOrderUI() {
             const orderList = getCurrentOrderList();
+            renderBagSwitcher();
 
             // 1A. 更新左側一般菜單品項的總份數與按鈕狀態
             const allQtyDisplays = document.querySelectorAll('[data-qty-display]');
@@ -1984,7 +2055,18 @@ let clearArmTimer = null;
                 clearBtn.disabled = false;
 
                 orderItemsList.innerHTML = '';
-                orderList.forEach((item, index) => {
+                const viewList = getOrdersByBag(orderList);
+                const showBagHeaders = bagHeaderNeeded(orderList);
+                let lastBag = -1;
+                viewList.forEach((item, index) => {
+                    if (showBagHeaders && item.bag !== lastBag) {
+                        const bagQty = orderList.filter(o => o.bag === item.bag).reduce((sum, o) => sum + o.qty, 0);
+                        const header = document.createElement('li');
+                        header.className = 'pt-1 flex items-center gap-2 text-xs font-bold text-slate-500';
+                        header.innerHTML = `<span class="px-2 py-0.5 rounded-md ${BAG_STYLES[item.bag]}">${BAGS[item.bag]}</span><span>共 ${bagQty} 份</span>`;
+                        orderItemsList.appendChild(header);
+                    }
+                    lastBag = item.bag;
                     const config = findMenuItemConfig(item.name);
                     const canCustomize = Boolean(config && config.customizable);
                     const safeItemNameAttr = escapeHtmlAttr(item.name);
@@ -2005,6 +2087,7 @@ let clearArmTimer = null;
                             <div class="min-w-0">
                                 <div class="font-medium text-slate-800 truncate">${escapeHtmlAttr(item.name)}</div>
                                 ${noteBadgeHtml}
+                                <button type="button" onclick="cycleOrderBag('${item.id}')" class="inline-block mt-0.5 text-xs font-semibold px-2 py-0.5 rounded-md ${BAG_STYLES[item.bag]}" title="點一下換到下一袋">${BAGS[item.bag]} ⇄</button>
                             </div>
                         </div>
                         <div class="flex items-center gap-1.5 shrink-0">
@@ -2040,9 +2123,20 @@ let clearArmTimer = null;
                 return;
             }
 
-            const lines = orderList.map(item => {
+            const fmt = item => {
                 const base = `${item.name} x${item.qty}`;
                 return item.note ? `${base}，${item.note}` : base;
+            };
+            const sorted = getOrdersByBag(orderList);
+            if (!bagHeaderNeeded(orderList)) {
+                outputTextarea.value = sorted.map(fmt).join('\n');
+                return;
+            }
+            const lines = [];
+            let lastBag = -1;
+            sorted.forEach(item => {
+                if (item.bag !== lastBag) { lines.push(`【${BAGS[item.bag]}】`); lastBag = item.bag; }
+                lines.push(fmt(item));
             });
             outputTextarea.value = lines.join('\n');
         }

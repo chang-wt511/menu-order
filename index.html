@@ -694,6 +694,7 @@
                         color: "text-amber-600",
                         bgBadge: "bg-amber-50",
                         allowDuplicateEntries: true, // 同品項可重複獨立出現在點餐明細中
+                        defaultQty: 5, // 基數 5 起跳
                         items: [
                             "招牌鍋貼",
                             "韭菜鍋貼",
@@ -709,6 +710,7 @@
                         color: "text-orange-500",
                         bgBadge: "bg-orange-50",
                         allowDuplicateEntries: true, // 同品項可重複獨立出現在點餐明細中
+                        defaultQty: 5, // 基數 5 起跳
                         items: [
                             "招牌水餃",
                             "韭菜水餃",
@@ -1034,6 +1036,7 @@
                             group,
                             itemObj,
                             allowDuplicateEntries: Boolean(group.allowDuplicateEntries),
+                            defaultQty: group.defaultQty || 1,
                             customizable: Boolean(group.customizable || (typeof itemObj === 'object' && itemObj.customizable)),
                             variants: (typeof itemObj === 'object' && Array.isArray(itemObj.variants)) ? itemObj.variants : null
                         };
@@ -1638,15 +1641,16 @@
                 const orderMap = storeOrderMaps[currentStoreId];
                 const config = findMenuItemConfig(itemName);
                 const allowDuplicate = Boolean(config && config.allowDuplicateEntries);
+                const initialQty = (config && config.defaultQty) ? config.defaultQty : 1;
 
                 if (delta > 0) {
                     if (allowDuplicate) {
-                        // 水餃跟鍋貼：每次點「+」皆建立獨立一筆明細，不合併數量（方便多人個別計算顆數）
+                        // 水餃跟鍋貼：每次點「+」皆建立獨立一筆明細，且預設基數為 5 顆起跳
                         orderList.push({
                             id: 'ord_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
                             name: itemName,
                             note: '',
-                            qty: delta
+                            qty: initialQty
                         });
                         orderList.sort((a, b) => (orderMap.get(a.name) ?? 999) - (orderMap.get(b.name) ?? 999));
                     } else {

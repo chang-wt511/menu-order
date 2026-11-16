@@ -579,6 +579,7 @@
                             {
                                 name: "滷肉飯",
                                 promptLabel: "請選擇份量",
+                                buttonLabel: "份量",
                                 variants: [
                                     { label: "正常", fullName: "滷肉飯" },
                                     { label: "加大", fullName: "滷肉飯，加大" }
@@ -587,6 +588,7 @@
                             {
                                 name: "雞肉飯",
                                 promptLabel: "請選擇份量",
+                                buttonLabel: "份量",
                                 variants: [
                                     { label: "正常", fullName: "雞肉飯" },
                                     { label: "加大", fullName: "雞肉飯，加大" }
@@ -595,6 +597,7 @@
                             {
                                 name: "爌肉筍飯",
                                 promptLabel: "請選擇份量",
+                                buttonLabel: "份量",
                                 variants: [
                                     { label: "正常", fullName: "爌肉筍飯" },
                                     { label: "加大", fullName: "爌肉筍飯，加大" }
@@ -603,6 +606,7 @@
                             {
                                 name: "高麗菜飯",
                                 promptLabel: "請選擇份量",
+                                buttonLabel: "份量",
                                 variants: [
                                     { label: "正常", fullName: "高麗菜飯" },
                                     { label: "加大", fullName: "高麗菜飯，加大" }
@@ -1527,7 +1531,7 @@
                                         onclick="openVariantModal('${safeNameAttr}')"
                                         class="px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 text-xs sm:text-sm font-bold hover:bg-amber-400 active:scale-95 transition shadow-sm flex items-center gap-1 select-none"
                                     >
-                                        <span>選口味</span>
+                                        <span>${itemObj.buttonLabel || '選口味'}</span>
                                         <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
                                     </button>
                                 </div>

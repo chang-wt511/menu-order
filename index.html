@@ -96,14 +96,15 @@
             <div class="lg:col-span-7 space-y-4">
                 
                 <!-- 置頂快速導覽工具列 (搜尋 + 分類錨點) -->
-                <div id="menu-sticky-toolbar" style="top: var(--header-h, 57px)" class="sticky z-20 bg-slate-50/95 backdrop-blur-md pt-1 pb-2.5 -mx-4 px-4 sm:mx-0 sm:px-0 border-b border-slate-200/70 space-y-2.5">
-                    <!-- 關鍵字即時搜尋框 -->
-                    <div class="relative">
+                <div id="menu-sticky-toolbar" style="top: var(--header-h, 57px)" class="sticky z-20 bg-slate-50/95 backdrop-blur-md pt-1 pb-2.5 -mx-4 px-4 sm:mx-0 sm:px-0 border-b border-slate-200/70 space-y-2">
+                    <!-- 搜尋框＋袋別（同一列） -->
+                    <div class="flex items-center gap-2">
+                    <div class="relative flex-1 min-w-0">
                         <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
                         <input 
                             type="text" 
                             id="menu-search-input" 
-                            placeholder="快速搜尋餐點（例如：招牌、牛肉麵、豆漿...）" 
+                            placeholder="搜尋餐點" 
                             class="w-full pl-9 pr-9 py-2 rounded-xl border border-slate-200 bg-white text-base sm:text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-sm transition"
                         />
                         <button 
@@ -117,10 +118,11 @@
                         </button>
                     </div>
 
-                    <!-- 目前放入的袋別 -->
-                    <div class="flex items-center gap-2 text-xs">
-                        <span class="font-bold text-slate-500 shrink-0">放入：</span>
-                        <div id="bag-buttons" class="flex gap-1.5 overflow-x-auto no-scrollbar"></div>
+                    <div class="relative shrink-0">
+                        <i data-lucide="shopping-bag" class="w-4 h-4 text-amber-600 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                        <select id="bag-select" class="appearance-none pl-9 pr-7 py-2 rounded-xl border border-slate-200 bg-white text-base sm:text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition"></select>
+                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                    </div>
                     </div>
 
                     <!-- 橫向分類快速跳轉膠囊列 -->
@@ -619,7 +621,7 @@
                             },
                             "油飯",
                             "素菜飯",
-                            "炒麵 + 甜辣醬，加大"
+                            "炒麵 + 甜辣醬"
                         ]
                     },
                     {
@@ -884,11 +886,11 @@
                         bgBadge: "bg-amber-50",
                         items: [
                             {
-                                name: "經典鮮雞湯麵-贈小菜",
+                                name: "經典鮮雞湯麵",
                                 promptLabel: "請選擇湯頭口味",
                                 variants: [
-                                    { label: "原味", fullName: "原味經典鮮雞湯麵-贈小菜" },
-                                    { label: "麻油", fullName: "麻油經典鮮雞湯麵-贈小菜" }
+                                    { label: "原味", fullName: "原味經典鮮雞湯麵" },
+                                    { label: "麻油", fullName: "麻油經典鮮雞湯麵" }
                                 ]
                             },
                             {
@@ -947,11 +949,11 @@
                             "珍珠餛飩湯",
                             "菜肉大餛飩湯",
                             {
-                                name: "經典鮮雞湯-贈小菜",
+                                name: "經典鮮雞湯",
                                 promptLabel: "請選擇湯頭口味",
                                 variants: [
-                                    { label: "原味", fullName: "原味經典鮮雞湯-贈小菜" },
-                                    { label: "麻油", fullName: "麻油經典鮮雞湯-贈小菜" }
+                                    { label: "原味", fullName: "原味經典鮮雞湯" },
+                                    { label: "麻油", fullName: "麻油經典鮮雞湯" }
                                 ]
                             }
                         ]
@@ -1349,21 +1351,14 @@ function getOrdersByBag(list) {
         }
 
         function renderBagSwitcher() {
-            const box = document.getElementById('bag-buttons');
-            if (!box) return;
-            const list = getCurrentOrderList();
-            box.innerHTML = '';
-            BAGS.forEach((name, i) => {
-                const qty = list.filter(o => o.bag === i).reduce((sum, o) => sum + o.qty, 0);
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.onclick = () => { currentBag = i; renderBagSwitcher(); };
-                btn.className = 'shrink-0 px-3 py-1.5 rounded-full border text-xs font-bold transition ' + (i === currentBag
-                    ? 'border-amber-500 bg-amber-500 text-slate-950'
-                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50');
-                btn.textContent = qty ? `${name}（${qty}）` : name;
-                box.appendChild(btn);
-            });
+            const sel = document.getElementById('bag-select');
+            if (!sel) return;
+            if (!sel.options.length) {
+                BAGS.forEach((name, i) => sel.add(new Option(name, i)));
+                sel.setAttribute('aria-label', '點餐放入的袋別');
+                sel.addEventListener('change', () => { currentBag = Number(sel.value); });
+            }
+            sel.value = String(currentBag);
         }
 
         // 點明細上的袋別標籤，輪流換到下一袋（同品項同備註會自動合併）
@@ -2077,21 +2072,20 @@ let clearArmTimer = null;
                         ? `<button type="button" onclick="openCustomModal('${safeItemNameAttr}', '${item.id}')" class="text-slate-400 hover:text-amber-600 p-1 rounded-lg transition" title="調整客製口味"><i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i></button>`
                         : '';
 
+                    const nextBagName = BAGS[(item.bag + 1) % BAGS.length];
+                    const bagBtnHtml = `<button type="button" onclick="cycleOrderBag('${item.id}')" class="text-slate-400 hover:text-amber-600 p-1 rounded-lg transition" title="換到「${nextBagName}」" aria-label="換到${nextBagName}"><i data-lucide="arrow-right-left" class="w-3.5 h-3.5"></i></button>`;
                     const li = document.createElement('li');
-                    li.className = 'flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-sm gap-2';
+                    li.className = 'flex items-center justify-between p-2.5 rounded-xl bg-slate-50 text-sm gap-2';
                     li.innerHTML = `
                         <div class="flex items-start gap-2.5 min-w-0">
-                            <span class="w-5 h-5 mt-0.5 rounded-full bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center shrink-0">
-                                ${index + 1}
-                            </span>
+                            
                             <div class="min-w-0">
                                 <div class="font-medium text-slate-800 truncate">${escapeHtmlAttr(item.name)}</div>
                                 ${noteBadgeHtml}
-                                <button type="button" onclick="cycleOrderBag('${item.id}')" class="inline-block mt-0.5 text-xs font-semibold px-2 py-0.5 rounded-md ${BAG_STYLES[item.bag]}" title="點一下換到下一袋">${BAGS[item.bag]} ⇄</button>
                             </div>
                         </div>
                         <div class="flex items-center gap-1.5 shrink-0">
-                            ${editBtnHtml}
+                            ${editBtnHtml}${bagBtnHtml}
                             <button type="button" onclick="changeOrderRowQty('${item.id}', -1)" class="w-8 h-8 sm:w-7 sm:h-7 rounded-md border border-slate-300 bg-white text-slate-600 flex items-center justify-center hover:bg-slate-100 text-xs font-bold">-</button>
                             <span class="font-bold text-amber-600 bg-amber-100/70 px-2 py-0.5 rounded-md min-w-[2.2rem] text-center">
                                 x${item.qty}

@@ -2,12 +2,14 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <!-- 禁止手機端雙擊放大或雙指縮放，防止快速點餐時畫面跳動 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- 雙擊縮放已由 touch-action: manipulation 處理；保留雙指縮放以符合無障礙需求 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>簡易點餐系統</title>
     <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- 引入 Google Fonts (Noto Sans TC 與 Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <!-- 引入 Lucide Icons -->
     <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -46,6 +48,9 @@
         }
         html {
             scroll-behavior: smooth;
+        }
+        #order-summary-section {
+            scroll-margin-top: calc(var(--header-h, 57px) + 8px);
         }
     </style>
 </head>
@@ -90,7 +95,7 @@
             <div class="lg:col-span-7 space-y-4">
                 
                 <!-- 置頂快速導覽工具列 (搜尋 + 分類錨點) -->
-                <div id="menu-sticky-toolbar" class="sticky top-[57px] sm:top-[61px] z-20 bg-slate-50/95 backdrop-blur-md pt-1 pb-2.5 -mx-4 px-4 sm:mx-0 sm:px-0 border-b border-slate-200/70 space-y-2.5">
+                <div id="menu-sticky-toolbar" style="top: var(--header-h, 57px)" class="sticky z-20 bg-slate-50/95 backdrop-blur-md pt-1 pb-2.5 -mx-4 px-4 sm:mx-0 sm:px-0 border-b border-slate-200/70 space-y-2.5">
                     <!-- 關鍵字即時搜尋框 -->
                     <div class="relative">
                         <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
@@ -243,7 +248,7 @@
     </button>
 
     <!-- 提示訊息 Toast (取代 alert) -->
-    <div id="toast" class="fixed bottom-36 lg:bottom-20 right-4 sm:right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
+    <div id="toast" role="status" aria-live="polite" class="fixed bottom-36 lg:bottom-20 right-4 sm:right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
         <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2.5 text-sm font-medium border border-slate-700">
             <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-400"></i>
             <span id="toast-message">已複製到剪貼簿！</span>
@@ -251,7 +256,7 @@
     </div>
 
     <!-- 彈窗 A：三寶麵線專用客製化彈窗 (醋、沙茶) -->
-    <div id="custom-modal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div id="custom-modal" role="dialog" aria-modal="true" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden">
             <!-- Modal 標題 -->
             <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
@@ -314,13 +319,13 @@
     </div>
 
     <!-- 彈窗 B：先選品項、再選口味/規格彈窗 (8方雲集整併品項專用) -->
-    <div id="variant-modal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div id="variant-modal" role="dialog" aria-modal="true" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden">
             <!-- Modal 標題 -->
             <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
                 <div>
                     <span class="text-xs text-amber-400 font-semibold block">先選品項・再選口味</span>
-                    <h3 id="variant-modal-title" class="text-lg font-bold mt-0.5">紅燒牛湯餃</h3>
+                    <h3 id="variant-modal-title" class="text-lg font-bold mt-0.5">牛湯餃</h3>
                 </div>
                 <button type="button" onclick="closeVariantModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg transition">
                     <i data-lucide="x" class="w-5 h-5"></i>
@@ -329,11 +334,11 @@
 
             <!-- 口味選項列表 -->
             <div class="p-5 space-y-4">
-                <div>
-                    <label id="variant-prompt-label" class="block text-sm font-bold text-slate-700 mb-2.5">請選擇口味：</label>
-                    <div id="variant-options-grid" class="grid grid-cols-2 gap-2">
-                        <!-- 動態渲染口味按鈕 -->
-                    </div>
+                <div id="variant-options-grid" class="space-y-4">
+                    <!-- 動態渲染湯底／口味按鈕 -->
+                </div>
+                <div class="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2 text-sm">
+                    <span class="text-slate-400">本次點選：</span><span id="variant-preview" class="font-bold text-slate-800"></span>
                 </div>
 
                 <!-- 份數調整 -->
@@ -757,28 +762,13 @@
                                 ]
                             },
                             {
-                                name: "紅燒牛湯餃",
-                                promptLabel: "請選擇水餃口味",
-                                variants: [
-                                    { label: "招牌", fullName: "紅燒牛湯餃(招牌)" },
-                                    { label: "韭菜", fullName: "紅燒牛湯餃(韭菜)" },
-                                    { label: "韓式辣味", fullName: "紅燒牛湯餃(韓式辣味)" },
-                                    { label: "咖哩", fullName: "紅燒牛湯餃(咖哩)" },
-                                    { label: "玉米", fullName: "紅燒牛湯餃(玉米)" },
-                                    { label: "鮮蝦", fullName: "紅燒牛湯餃(鮮蝦)" }
-                                ]
-                            },
-                            {
-                                name: "麻辣牛湯餃",
-                                promptLabel: "請選擇水餃口味",
-                                variants: [
-                                    { label: "招牌", fullName: "麻辣牛湯餃(招牌)" },
-                                    { label: "韭菜", fullName: "麻辣牛湯餃(韭菜)" },
-                                    { label: "韓式辣味", fullName: "麻辣牛湯餃(韓式辣味)" },
-                                    { label: "咖哩", fullName: "麻辣牛湯餃(咖哩)" },
-                                    { label: "玉米", fullName: "麻辣牛湯餃(玉米)" },
-                                    { label: "鮮蝦", fullName: "麻辣牛湯餃(鮮蝦)" }
-                                ]
+                                name: "牛湯餃",
+                                optionGroups: [
+                                    { key: "soup", label: "請選擇湯底", options: ["紅燒", "麻辣"] },
+                                    { key: "filling", label: "請選擇水餃口味", options: ["招牌", "韭菜", "韓式辣味", "咖哩", "玉米", "鮮蝦"] }
+                                ],
+                                // 組合後的輸出品名（與原本格式相同，例如：紅燒牛湯餃(招牌)）
+                                fullNameTemplate: "{soup}牛湯餃({filling})"
                             },
                             {
                                 name: "牛湯珍珠餛飩",
@@ -923,6 +913,28 @@
         // ==========================================
         // 2. 狀態管理與多店獨立儲存空間
         // ==========================================
+        // 將所有「先選品項、再選口味」品項統一成 optionGroups + variants（variants 含 combo 索引）
+        (function normalizeVariantItems() {
+            STORES_DATA.forEach(store => store.menu.forEach(group => group.items.forEach(item => {
+                if (typeof item === 'string') return;
+                if (Array.isArray(item.optionGroups)) {
+                    let combos = [[]];
+                    item.optionGroups.forEach(g => {
+                        combos = combos.flatMap(c => g.options.map((_, oi) => [...c, oi]));
+                    });
+                    item.variants = combos.map(combo => {
+                        const labels = combo.map((oi, gi) => item.optionGroups[gi].options[oi]);
+                        const fullName = item.fullNameTemplate.replace(/\{(\w+)\}/g, (_, key) =>
+                            labels[item.optionGroups.findIndex(g => g.key === key)]);
+                        return { label: labels.join(' / '), fullName, combo };
+                    });
+                } else if (Array.isArray(item.variants)) {
+                    item.optionGroups = [{ key: 'v', label: item.promptLabel || '請選擇口味', options: item.variants.map(v => v.label) }];
+                    item.variants.forEach((v, i) => { v.combo = [i]; });
+                }
+            })));
+        })();
+
         let currentStoreId = STORES_DATA[0].id;
         let isSoloMode = false;
         let currentSearchQuery = '';
@@ -968,9 +980,9 @@
         // 彈窗 B：先選品項、再選口味彈窗狀態
         let variantModalState = {
             baseName: '',
-            promptLabel: '請選擇口味：',
+            groups: [],
             variants: [],
-            selectedIndex: 0,
+            selected: [],
             qty: 1
         };
 
@@ -998,7 +1010,7 @@
         const modalQtyDisplay = document.getElementById('modal-qty-display');
         const variantModal = document.getElementById('variant-modal');
         const variantModalTitle = document.getElementById('variant-modal-title');
-        const variantPromptLabel = document.getElementById('variant-prompt-label');
+        const variantPreview = document.getElementById('variant-preview');
         const variantOptionsGrid = document.getElementById('variant-options-grid');
         const variantQtyDisplay = document.getElementById('variant-qty-display');
         const backToTopBtn = document.getElementById('back-to-top-btn');
@@ -1105,6 +1117,7 @@
 
             if (menuSearchInput) {
                 menuSearchInput.addEventListener('input', (e) => {
+                    if (e.isComposing) return; // 組字中不篩選，避免閃現「找不到」
                     currentSearchQuery = e.target.value.trim();
                     if (clearSearchBtn) {
                         clearSearchBtn.classList.toggle('hidden', currentSearchQuery.length === 0);
@@ -1123,8 +1136,27 @@
                 }
             });
 
-            window.addEventListener('scroll', handleScrollSpy, { passive: true });
+            // 以 rAF 節流，避免每次 scroll 事件都強制重排
+            let scrollTicking = false;
+            window.addEventListener('scroll', () => {
+                if (scrollTicking) return;
+                scrollTicking = true;
+                requestAnimationFrame(() => { scrollTicking = false; handleScrollSpy(); });
+            }, { passive: true });
 
+            // 動態同步 header 高度（多店頁籤換行時，固定的搜尋列才不會被蓋住）
+            const headerEl = document.getElementById('main-header');
+            const syncHeaderHeight = () => document.documentElement.style.setProperty('--header-h', headerEl.offsetHeight + 'px');
+            syncHeaderHeight();
+            if (window.ResizeObserver) new ResizeObserver(syncHeaderHeight).observe(headerEl);
+            else window.addEventListener('resize', syncHeaderHeight);
+
+            // 注音/拼音組字結束後才觸發搜尋
+            if (menuSearchInput) {
+                menuSearchInput.addEventListener('compositionend', () => menuSearchInput.dispatchEvent(new Event('input')));
+            }
+
+            loadOrders();
             switchStore(currentStoreId);
 
             copyBtn.addEventListener('click', copyOrderToClipboard);
@@ -1188,7 +1220,7 @@
 
             const targetEl = document.getElementById(`cat-section-${catIndex}`);
             if (targetEl) {
-                const headerOffset = window.innerWidth >= 640 ? 168 : 162;
+                const headerOffset = getStickyOffset() + 8;
                 const elementPosition = targetEl.getBoundingClientRect().top;
                 const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
 
@@ -1207,6 +1239,12 @@
             safeIcons();
         };
 
+        function getStickyOffset() {
+            const h = document.getElementById('main-header');
+            const t = document.getElementById('menu-sticky-toolbar');
+            return (h ? h.offsetHeight : 0) + (t ? t.offsetHeight : 0);
+        }
+
         function handleScrollSpy() {
             // 控制右下角 TOP 按鈕的顯示與隱藏（向下捲動超過 200px 時顯示）
             if (backToTopBtn) {
@@ -1219,7 +1257,7 @@
 
             if (currentSearchQuery) return;
             const store = getCurrentStore();
-            const threshold = window.innerWidth >= 640 ? 190 : 185;
+            const threshold = getStickyOffset() + 24;
             let detectedIndex = 0;
 
             store.menu.forEach((_, idx) => {
@@ -1322,7 +1360,6 @@
         function renderMenu() {
             const store = getCurrentStore();
             menuContainer.innerHTML = '';
-            renderCategoryNav();
 
             const keyword = currentSearchQuery.toLowerCase();
             let totalMatchedItems = 0;
@@ -1392,12 +1429,11 @@
 
                         if (hasVariants) {
                             // 先選品項、再選口味模式卡片
-                            const variantTags = itemObj.variants.map(v => v.label).join(' / ');
+                            const variantTags = itemObj.optionGroups.map(g => g.options.join(' / ')).join(' ｜ ');
                             card.innerHTML = `
-                                <div class="min-w-0 flex-1 cursor-pointer" onclick="openVariantModal('${safeNameAttr}')">
+                                <button type="button" class="min-w-0 flex-1 text-left" onclick="openVariantModal('${safeNameAttr}')">
                                     <div class="font-medium text-slate-800 text-sm sm:text-base truncate">${itemName}</div>
-                                    <div class="text-[11px] text-slate-400 truncate mt-0.5">${variantTags}</div>
-                                </div>
+                                    <div class="text-[11px] text-slate-400 truncate mt-0.5">${variantTags}</div></button>
                                 <div class="flex items-center gap-2 shrink-0">
                                     <span 
                                         class="hidden text-xs font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full select-none" 
@@ -1496,11 +1532,13 @@
             modalQtyDisplay.textContent = modalState.qty;
             updateModalButtonsUI();
             customModal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
             safeIcons();
         };
 
         window.closeCustomModal = function() {
             customModal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
         };
 
         window.changeModalQty = function(delta) {
@@ -1563,28 +1601,34 @@
             if (!config || !config.variants) return;
 
             variantModalState.baseName = baseName;
-            variantModalState.promptLabel = config.itemObj.promptLabel || '請選擇口味：';
+            variantModalState.groups = config.itemObj.optionGroups;
             variantModalState.variants = config.variants;
-            variantModalState.selectedIndex = 0;
+            variantModalState.selected = config.itemObj.optionGroups.map(() => 0);
             variantModalState.qty = 1;
 
             variantModalTitle.textContent = baseName;
-            variantPromptLabel.textContent = variantModalState.promptLabel + '：';
             variantQtyDisplay.textContent = '1';
 
             renderVariantOptionsUI();
             variantModal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
             safeIcons();
         };
 
         window.closeVariantModal = function() {
             variantModal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
         };
 
-        window.selectVariantOption = function(idx) {
-            variantModalState.selectedIndex = idx;
+        window.selectVariantOption = function(gi, oi) {
+            variantModalState.selected[gi] = oi;
             renderVariantOptionsUI();
         };
+
+        function getChosenVariant() {
+            const sel = variantModalState.selected;
+            return variantModalState.variants.find(v => v.combo.every((oi, i) => oi === sel[i]));
+        }
 
         window.changeVariantQty = function(delta) {
             variantModalState.qty = Math.max(1, variantModalState.qty + delta);
@@ -1593,21 +1637,34 @@
 
         function renderVariantOptionsUI() {
             variantOptionsGrid.innerHTML = '';
-            variantModalState.variants.forEach((v, idx) => {
-                const isSelected = idx === variantModalState.selectedIndex;
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.onclick = () => selectVariantOption(idx);
-                btn.className = isSelected
-                    ? 'py-2.5 px-3 rounded-xl border-2 border-amber-500 bg-amber-50 text-amber-900 text-sm font-bold transition text-center'
-                    : 'py-2.5 px-3 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50 transition text-center';
-                btn.textContent = v.label;
-                variantOptionsGrid.appendChild(btn);
+            const multi = variantModalState.groups.length > 1;
+            variantModalState.groups.forEach((group, gi) => {
+                const wrap = document.createElement('div');
+                const label = document.createElement('div');
+                label.className = 'text-sm font-bold text-slate-700 mb-2';
+                label.textContent = (multi ? `${gi + 1}. ` : '') + group.label + '：';
+                const grid = document.createElement('div');
+                grid.className = 'grid grid-cols-2 gap-2';
+                group.options.forEach((opt, oi) => {
+                    const isSelected = oi === variantModalState.selected[gi];
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.onclick = () => selectVariantOption(gi, oi);
+                    btn.className = isSelected
+                        ? 'py-2.5 px-3 rounded-xl border-2 border-amber-500 bg-amber-50 text-amber-900 text-sm font-bold transition text-center'
+                        : 'py-2.5 px-3 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50 transition text-center';
+                    btn.textContent = opt;
+                    grid.appendChild(btn);
+                });
+                wrap.append(label, grid);
+                variantOptionsGrid.appendChild(wrap);
             });
+            const chosen = getChosenVariant();
+            variantPreview.textContent = chosen ? chosen.fullName : '';
         }
 
         window.confirmVariantOrder = function() {
-            const chosenVariant = variantModalState.variants[variantModalState.selectedIndex];
+            const chosenVariant = getChosenVariant();
             if (!chosenVariant) return;
 
             const fullName = chosenVariant.fullName;
@@ -1730,7 +1787,45 @@
             updateOrderUI();
         };
 
+const STORAGE_KEY = 'quick-order-v1';
+
+        // 還原上次訂單（只保留仍存在於菜單中的品項，舊版品名格式相同故可沿用）
+        function loadOrders() {
+            try {
+                const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+                STORES_DATA.forEach(store => {
+                    const map = storeOrderMaps[store.id];
+                    const list = Array.isArray(saved[store.id]) ? saved[store.id] : [];
+                    storeOrders[store.id] = list
+                        .filter(o => o && map.has(o.name) && Number.isInteger(o.qty) && o.qty > 0)
+                        .map(o => ({
+                            id: o.id || ('ord_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6)),
+                            name: o.name, note: String(o.note || ''), qty: o.qty
+                        }));
+                });
+            } catch (e) { /* 儲存被停用時略過 */ }
+        }
+
+        function saveOrders() {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(storeOrders)); } catch (e) { /* ignore */ }
+        }
+
+        let clearArmTimer = null;
+        function resetClearBtn() {
+            clearTimeout(clearArmTimer);
+            clearArmTimer = null;
+            clearBtn.querySelector('span').textContent = '清空';
+        }
+
         function clearAllOrders() {
+            // 防誤觸：第一次點擊先進入確認狀態，3 秒內再按一次才清空
+            if (getCurrentOrderList().length === 0) return;
+            if (!clearArmTimer) {
+                clearBtn.querySelector('span').textContent = '再按一次清空';
+                clearArmTimer = setTimeout(resetClearBtn, 3000);
+                return;
+            }
+            resetClearBtn();
             const orderList = getCurrentOrderList();
             if (orderList.length === 0) return;
             storeOrders[currentStoreId] = [];
@@ -1830,7 +1925,7 @@
                     const canCustomize = Boolean(config && config.customizable);
                     const safeItemNameAttr = escapeHtmlAttr(item.name);
                     const noteBadgeHtml = item.note
-                        ? `<span class="inline-block mt-0.5 text-xs font-semibold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md">${item.note}</span>`
+                        ? `<span class="inline-block mt-0.5 text-xs font-semibold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md">${escapeHtmlAttr(item.note)}</span>`
                         : '';
                     const editBtnHtml = canCustomize
                         ? `<button type="button" onclick="openCustomModal('${safeItemNameAttr}', '${item.id}')" class="text-slate-400 hover:text-amber-600 p-1 rounded-lg transition" title="調整客製口味"><i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i></button>`
@@ -1844,17 +1939,17 @@
                                 ${index + 1}
                             </span>
                             <div class="min-w-0">
-                                <div class="font-medium text-slate-800 truncate">${item.name}</div>
+                                <div class="font-medium text-slate-800 truncate">${escapeHtmlAttr(item.name)}</div>
                                 ${noteBadgeHtml}
                             </div>
                         </div>
                         <div class="flex items-center gap-1.5 shrink-0">
                             ${editBtnHtml}
-                            <button type="button" onclick="changeOrderRowQty('${item.id}', -1)" class="w-6 h-6 rounded-md border border-slate-300 bg-white text-slate-600 flex items-center justify-center hover:bg-slate-100 text-xs font-bold">-</button>
+                            <button type="button" onclick="changeOrderRowQty('${item.id}', -1)" class="w-8 h-8 sm:w-7 sm:h-7 rounded-md border border-slate-300 bg-white text-slate-600 flex items-center justify-center hover:bg-slate-100 text-xs font-bold">-</button>
                             <span class="font-bold text-amber-600 bg-amber-100/70 px-2 py-0.5 rounded-md min-w-[2.2rem] text-center">
                                 x${item.qty}
                             </span>
-                            <button type="button" onclick="changeOrderRowQty('${item.id}', 1)" class="w-6 h-6 rounded-md border border-slate-300 bg-white text-slate-600 flex items-center justify-center hover:bg-slate-100 text-xs font-bold">+</button>
+                            <button type="button" onclick="changeOrderRowQty('${item.id}', 1)" class="w-8 h-8 sm:w-7 sm:h-7 rounded-md border border-slate-300 bg-white text-slate-600 flex items-center justify-center hover:bg-slate-100 text-xs font-bold">+</button>
                             <button 
                                 type="button" 
                                 onclick="removeOrderRow('${item.id}')" 
@@ -1872,6 +1967,7 @@
 
             // 4. 更新純文字輸出區
             updateOutputText();
+            saveOrders();
         }
 
         function updateOutputText() {

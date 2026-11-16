@@ -576,13 +576,41 @@
                         color: "text-amber-600",
                         bgBadge: "bg-amber-50",
                         items: [
-                            "滷肉飯（大）",
-                            "雞肉飯（大）",
-                            "爌肉筍飯（大）",
-                            "高麗菜飯",
+                            {
+                                name: "滷肉飯",
+                                promptLabel: "請選擇份量",
+                                variants: [
+                                    { label: "正常", fullName: "滷肉飯" },
+                                    { label: "加大", fullName: "滷肉飯，加大" }
+                                ]
+                            },
+                            {
+                                name: "雞肉飯",
+                                promptLabel: "請選擇份量",
+                                variants: [
+                                    { label: "正常", fullName: "雞肉飯" },
+                                    { label: "加大", fullName: "雞肉飯，加大" }
+                                ]
+                            },
+                            {
+                                name: "爌肉筍飯",
+                                promptLabel: "請選擇份量",
+                                variants: [
+                                    { label: "正常", fullName: "爌肉筍飯" },
+                                    { label: "加大", fullName: "爌肉筍飯，加大" }
+                                ]
+                            },
+                            {
+                                name: "高麗菜飯",
+                                promptLabel: "請選擇份量",
+                                variants: [
+                                    { label: "正常", fullName: "高麗菜飯" },
+                                    { label: "加大", fullName: "高麗菜飯，加大" }
+                                ]
+                            },
                             "油飯",
                             "素菜飯",
-                            "炒麵 + 甜辣醬（大）"
+                            "炒麵 + 甜辣醬"
                         ]
                     },
                     {

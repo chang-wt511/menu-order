@@ -89,7 +89,7 @@
             <!-- 左側：菜單選擇區 (佔 7 欄) -->
             <div class="lg:col-span-7 space-y-4">
                 
-                <!-- 置頂快速導覽工具列 (解決長菜單滑動痛點：搜尋 + 分類錨點) -->
+                <!-- 置頂快速導覽工具列 (搜尋 + 分類錨點) -->
                 <div id="menu-sticky-toolbar" class="sticky top-[57px] sm:top-[61px] z-20 bg-slate-50/95 backdrop-blur-md pt-1 pb-2.5 -mx-4 px-4 sm:mx-0 sm:px-0 border-b border-slate-200/70 space-y-2.5">
                     <!-- 關鍵字即時搜尋框 -->
                     <div class="relative">
@@ -97,7 +97,7 @@
                         <input 
                             type="text" 
                             id="menu-search-input" 
-                            placeholder="快速搜尋餐點（例如：虱目魚、泡菜、烏龍...）" 
+                            placeholder="快速搜尋餐點（例如：招牌、牛肉麵、豆漿...）" 
                             class="w-full pl-9 pr-9 py-2 rounded-xl border border-slate-200 bg-white text-base sm:text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-sm transition"
                         />
                         <button 
@@ -148,12 +148,12 @@
                     </div>
 
                     <!-- 互動式明細列表 -->
-                    <div class="p-4 sm:p-5 max-h-[40vh] overflow-y-auto border-b border-slate-100" id="order-list-container">
+                    <div class="p-4 sm:p-5 max-h-[42vh] overflow-y-auto border-b border-slate-100" id="order-list-container">
                         <!-- 空白狀態 -->
                         <div id="empty-state" class="py-10 text-center text-slate-400 flex flex-col items-center justify-center">
                             <i data-lucide="clipboard-list" class="w-12 h-12 mb-3 text-slate-300 stroke-[1.5]"></i>
                             <p class="text-sm font-medium text-slate-500">尚未選擇任何餐點</p>
-                            <p class="text-xs mt-1">請從左側菜單點擊「+」或「客製」開始點餐</p>
+                            <p class="text-xs mt-1">請從左側菜單點擊品項開始點餐</p>
                         </div>
                         
                         <!-- 訂單項目列表 -->
@@ -229,17 +229,30 @@
         </button>
     </div>
 
+    <!-- 右下角回到最上方 TOP 按鈕 -->
+    <button
+        id="back-to-top-btn"
+        type="button"
+        onclick="scrollToTop()"
+        aria-label="回到最上方"
+        title="回到最上方"
+        class="fixed bottom-20 lg:bottom-6 right-4 sm:right-6 z-40 w-11 h-11 rounded-full bg-slate-900/90 hover:bg-amber-500 text-white hover:text-slate-950 border border-slate-700 hover:border-amber-400 shadow-lg backdrop-blur-sm flex flex-col items-center justify-center transition-all duration-300 opacity-0 translate-y-4 pointer-events-none active:scale-90"
+    >
+        <i data-lucide="arrow-up" class="w-4 h-4 -mb-0.5"></i>
+        <span class="text-[10px] font-bold tracking-tight leading-none">TOP</span>
+    </button>
+
     <!-- 提示訊息 Toast (取代 alert) -->
-    <div id="toast" class="fixed bottom-20 lg:bottom-5 right-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
+    <div id="toast" class="fixed bottom-36 lg:bottom-20 right-4 sm:right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
         <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2.5 text-sm font-medium border border-slate-700">
             <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-400"></i>
             <span id="toast-message">已複製到剪貼簿！</span>
         </div>
     </div>
 
-    <!-- 單一品項客製化彈窗 Modal (三寶麵線專用：醋、沙茶) -->
+    <!-- 彈窗 A：三寶麵線專用客製化彈窗 (醋、沙茶) -->
     <div id="custom-modal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden">
             <!-- Modal 標題 -->
             <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
                 <div>
@@ -300,9 +313,59 @@
         </div>
     </div>
 
+    <!-- 彈窗 B：先選品項、再選口味/規格彈窗 (8方雲集整併品項專用) -->
+    <div id="variant-modal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden">
+            <!-- Modal 標題 -->
+            <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
+                <div>
+                    <span class="text-xs text-amber-400 font-semibold block">先選品項・再選口味</span>
+                    <h3 id="variant-modal-title" class="text-lg font-bold mt-0.5">紅燒牛湯餃</h3>
+                </div>
+                <button type="button" onclick="closeVariantModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- 口味選項列表 -->
+            <div class="p-5 space-y-4">
+                <div>
+                    <label id="variant-prompt-label" class="block text-sm font-bold text-slate-700 mb-2.5">請選擇口味：</label>
+                    <div id="variant-options-grid" class="grid grid-cols-2 gap-2">
+                        <!-- 動態渲染口味按鈕 -->
+                    </div>
+                </div>
+
+                <!-- 份數調整 -->
+                <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+                    <span class="text-sm font-bold text-slate-700">選擇數量</span>
+                    <div class="flex items-center gap-3">
+                        <button type="button" onclick="changeVariantQty(-1)" class="w-9 h-9 rounded-lg border border-slate-300 bg-white text-slate-700 flex items-center justify-center hover:bg-slate-100 active:scale-90 transition">
+                            <i data-lucide="minus" class="w-4 h-4"></i>
+                        </button>
+                        <span id="variant-qty-display" class="w-6 text-center font-bold text-base text-slate-900">1</span>
+                        <button type="button" onclick="changeVariantQty(1)" class="w-9 h-9 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center hover:bg-amber-400 active:scale-90 transition">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal 底部按鈕 -->
+            <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button type="button" onclick="closeVariantModal()" class="px-4 py-2 rounded-xl border border-slate-300 bg-white text-slate-600 text-sm font-medium hover:bg-slate-100 transition">
+                    取消
+                </button>
+                <button type="button" onclick="confirmVariantOrder()" class="px-5 py-2 rounded-xl bg-amber-500 text-slate-950 text-sm font-bold hover:bg-amber-400 shadow-sm transition">
+                    加入明細
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ==========================================
-        // 1. 多餐廳菜單資料庫 (設定專屬數字代碼 paramCode：香村=1, 阿花=2, 三寶麵線=3, 零五=5)
+        // 1. 多餐廳菜單資料庫 (編號：香村=1, 阿花=2, 三寶麵線=3, 零五=5, 8方雲集=8)
         // ==========================================
         const STORES_DATA = [
             {
@@ -446,7 +509,7 @@
                         icon: "soup",
                         color: "text-amber-600",
                         bgBadge: "bg-amber-50",
-                        customizable: true, // 整類開啟醋/沙茶客製化
+                        customizable: true,
                         items: [
                             "大腸麵線(大)",
                             "大腸麵線(小)",
@@ -618,6 +681,240 @@
                         ]
                     }
                 ]
+            },
+            {
+                id: "bafang",
+                paramCode: "8",
+                shortName: "8方雲集",
+                title: "8方雲集簡易點餐系統",
+                menu: [
+                    {
+                        category: "鍋貼",
+                        icon: "flame",
+                        color: "text-amber-600",
+                        bgBadge: "bg-amber-50",
+                        allowDuplicateEntries: true, // 同品項可重複獨立出現在點餐明細中
+                        items: [
+                            "招牌鍋貼",
+                            "韭菜鍋貼",
+                            "韓式辣味鍋貼",
+                            "咖哩鍋貼",
+                            "玉米鍋貼",
+                            "新蔬食鍋貼"
+                        ]
+                    },
+                    {
+                        category: "水餃",
+                        icon: "utensils",
+                        color: "text-orange-500",
+                        bgBadge: "bg-orange-50",
+                        allowDuplicateEntries: true, // 同品項可重複獨立出現在點餐明細中
+                        items: [
+                            "招牌水餃",
+                            "韭菜水餃",
+                            "韓式辣味水餃",
+                            "咖哩水餃",
+                            "玉米水餃",
+                            "新蔬食水餃",
+                            "鮮蝦水餃",
+                            "玉米（招牌）湯餃",
+                            "酸辣（招牌）湯餃"
+                        ]
+                    },
+                    {
+                        category: "八方牛肉麵",
+                        icon: "soup",
+                        color: "text-rose-600",
+                        bgBadge: "bg-rose-50",
+                        items: [
+                            {
+                                name: "牛肉麵",
+                                promptLabel: "請選擇口味",
+                                variants: [
+                                    { label: "紅燒", fullName: "紅燒牛肉麵" },
+                                    { label: "清燉", fullName: "清燉牛肉麵" },
+                                    { label: "麻辣", fullName: "麻辣牛肉麵" }
+                                ]
+                            },
+                            {
+                                name: "牛肉冬粉",
+                                promptLabel: "請選擇口味",
+                                variants: [
+                                    { label: "紅燒", fullName: "紅燒牛肉冬粉" },
+                                    { label: "清燉", fullName: "清燉牛肉冬粉" },
+                                    { label: "麻辣", fullName: "麻辣牛肉冬粉" }
+                                ]
+                            },
+                            {
+                                name: "牛肉湯",
+                                promptLabel: "請選擇口味",
+                                variants: [
+                                    { label: "紅燒", fullName: "紅燒牛肉湯" },
+                                    { label: "清燉", fullName: "清燉牛肉湯" },
+                                    { label: "麻辣", fullName: "麻辣牛肉湯" }
+                                ]
+                            },
+                            {
+                                name: "紅燒牛湯餃",
+                                promptLabel: "請選擇水餃口味",
+                                variants: [
+                                    { label: "招牌", fullName: "紅燒牛湯餃(招牌)" },
+                                    { label: "韭菜", fullName: "紅燒牛湯餃(韭菜)" },
+                                    { label: "韓式辣味", fullName: "紅燒牛湯餃(韓式辣味)" },
+                                    { label: "咖哩", fullName: "紅燒牛湯餃(咖哩)" },
+                                    { label: "玉米", fullName: "紅燒牛湯餃(玉米)" },
+                                    { label: "鮮蝦", fullName: "紅燒牛湯餃(鮮蝦)" }
+                                ]
+                            },
+                            {
+                                name: "麻辣牛湯餃",
+                                promptLabel: "請選擇水餃口味",
+                                variants: [
+                                    { label: "招牌", fullName: "麻辣牛湯餃(招牌)" },
+                                    { label: "韭菜", fullName: "麻辣牛湯餃(韭菜)" },
+                                    { label: "韓式辣味", fullName: "麻辣牛湯餃(韓式辣味)" },
+                                    { label: "咖哩", fullName: "麻辣牛湯餃(咖哩)" },
+                                    { label: "玉米", fullName: "麻辣牛湯餃(玉米)" },
+                                    { label: "鮮蝦", fullName: "麻辣牛湯餃(鮮蝦)" }
+                                ]
+                            },
+                            {
+                                name: "牛湯珍珠餛飩",
+                                promptLabel: "請選擇牛肉湯口味",
+                                variants: [
+                                    { label: "紅燒", fullName: "紅燒牛湯珍珠餛飩" },
+                                    { label: "麻辣", fullName: "麻辣牛湯珍珠餛飩" }
+                                ]
+                            },
+                            {
+                                name: "牛湯菜肉大餛飩",
+                                promptLabel: "請選擇牛肉湯口味",
+                                variants: [
+                                    { label: "紅燒", fullName: "紅燒牛湯菜肉大餛飩" },
+                                    { label: "麻辣", fullName: "麻辣牛湯菜肉大餛飩" }
+                                ]
+                            },
+                            {
+                                name: "美國帶骨牛小排麵",
+                                promptLabel: "請選擇湯頭口味",
+                                variants: [
+                                    { label: "清燉", fullName: "清燉美國帶骨牛小排麵" },
+                                    { label: "紅燒", fullName: "紅燒美國帶骨牛小排麵" }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        category: "麵食",
+                        icon: "utensils-crossed",
+                        color: "text-amber-600",
+                        bgBadge: "bg-amber-50",
+                        items: [
+                            {
+                                name: "經典鮮雞湯麵-贈小菜",
+                                promptLabel: "請選擇湯頭口味",
+                                variants: [
+                                    { label: "原味", fullName: "原味經典鮮雞湯麵-贈小菜" },
+                                    { label: "麻油", fullName: "麻油經典鮮雞湯麵-贈小菜" }
+                                ]
+                            },
+                            {
+                                name: "珍珠抄手",
+                                promptLabel: "請選擇醬汁口味",
+                                variants: [
+                                    { label: "紅油", fullName: "紅油-珍珠抄手" },
+                                    { label: "和風", fullName: "和風-珍珠抄手" }
+                                ]
+                            },
+                            {
+                                name: "菜肉大抄手",
+                                promptLabel: "請選擇醬汁口味",
+                                variants: [
+                                    { label: "紅油", fullName: "紅油-菜肉大抄手" },
+                                    { label: "和風", fullName: "和風-菜肉大抄手" }
+                                ]
+                            },
+                            "古早味乾麵",
+                            "麻醬乾麵",
+                            "紹辣乾麵",
+                            "招牌乾麵(微辣)",
+                            "梁師傅排骨麵",
+                            "古早味湯麵",
+                            "酸辣湯麵",
+                            "榨菜肉絲麵",
+                            {
+                                name: "珍珠餛飩麵",
+                                promptLabel: "請選擇口味",
+                                variants: [
+                                    { label: "原味", fullName: "珍珠餛飩麵" },
+                                    { label: "紹辣乾", fullName: "紹辣珍珠餛飩乾麵" },
+                                    { label: "紹辣湯", fullName: "紹辣珍珠餛飩湯麵" }
+                                ]
+                            },
+                            {
+                                name: "菜肉大餛飩麵",
+                                promptLabel: "請選擇口味",
+                                variants: [
+                                    { label: "原味", fullName: "菜肉大餛飩麵" },
+                                    { label: "紹辣", fullName: "紹辣菜肉大餛飩麵" }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        category: "湯品",
+                        icon: "cup-soda",
+                        color: "text-emerald-600",
+                        bgBadge: "bg-emerald-50",
+                        items: [
+                            "酸辣湯",
+                            "玉米濃湯",
+                            "原塊花枝魚丸湯",
+                            "蘿蔔湯",
+                            "珍珠餛飩湯",
+                            "菜肉大餛飩湯",
+                            {
+                                name: "經典鮮雞湯-贈小菜",
+                                promptLabel: "請選擇湯頭口味",
+                                variants: [
+                                    { label: "原味", fullName: "原味經典鮮雞湯-贈小菜" },
+                                    { label: "麻油", fullName: "麻油經典鮮雞湯-贈小菜" }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        category: "飲料",
+                        icon: "glass-water",
+                        color: "text-sky-600",
+                        bgBadge: "bg-sky-50",
+                        items: [
+                            "白豆漿",
+                            "無糖豆漿",
+                            "黑豆漿",
+                            "真傳紅茶"
+                        ]
+                    },
+                    {
+                        category: "小菜",
+                        icon: "salad",
+                        color: "text-green-600",
+                        bgBadge: "bg-green-50",
+                        items: [
+                            "古早味排骨",
+                            "滷蛋",
+                            "滷蛋配豆干",
+                            "皮蛋嫩豆腐",
+                            "涼拌豆腐",
+                            "黃金豆腐",
+                            "薄鹽毛豆",
+                            "柚香蘿蔔",
+                            "黃金泡菜",
+                            "燙青菜",
+                            "燉蘿蔔"
+                        ]
+                    }
+                ]
             }
         ];
 
@@ -628,30 +925,50 @@
         let isSoloMode = false;
         let currentSearchQuery = '';
         let activeCategoryIndex = 0;
-        const collapsedCategories = {}; // 紀錄各店摺疊狀態: { "lingwu_0": true }
+        const collapsedCategories = {};
 
-        // 為每家餐廳建立獨立的訂單陣列與菜單順序索引 Map
-        const storeOrders = {};     // 格式: { xiangcun: [...], sanbao: [...] }
-        const storeOrderMaps = {};  // 格式: { xiangcun: Map, sanbao: Map }
+        const storeOrders = {};
+        const storeOrderMaps = {};
 
+        // 建立每家餐廳的訂單陣列與菜單順序索引 Map（含所有變體口味的排序權重）
         STORES_DATA.forEach(store => {
             storeOrders[store.id] = [];
             const orderMap = new Map();
-            store.menu.flatMap(group => group.items).forEach((itemObj, index) => {
-                const name = typeof itemObj === 'string' ? itemObj : itemObj.name;
-                orderMap.set(name, index);
+            let seq = 0;
+            store.menu.forEach(group => {
+                group.items.forEach(itemObj => {
+                    if (typeof itemObj === 'string') {
+                        orderMap.set(itemObj, seq++);
+                    } else if (Array.isArray(itemObj.variants)) {
+                        orderMap.set(itemObj.name, seq);
+                        itemObj.variants.forEach(v => {
+                            orderMap.set(v.fullName, seq++);
+                        });
+                    } else {
+                        orderMap.set(itemObj.name, seq++);
+                    }
+                });
             });
             storeOrderMaps[store.id] = orderMap;
         });
 
         let toastTimeout = null;
 
-        // 客製化彈窗狀態
+        // 彈窗 A：三寶麵線客製化狀態
         let modalState = {
-            editingOrderId: null, // 若為 null 代表新增，若有值代表編輯既有明細列
+            editingOrderId: null,
             itemName: '',
             vinegar: '',
             shacha: '',
+            qty: 1
+        };
+
+        // 彈窗 B：先選品項、再選口味彈窗狀態
+        let variantModalState = {
+            baseName: '',
+            promptLabel: '請選擇口味：',
+            variants: [],
+            selectedIndex: 0,
             qty: 1
         };
 
@@ -677,8 +994,13 @@
         const customModal = document.getElementById('custom-modal');
         const modalItemTitle = document.getElementById('modal-item-title');
         const modalQtyDisplay = document.getElementById('modal-qty-display');
+        const variantModal = document.getElementById('variant-modal');
+        const variantModalTitle = document.getElementById('variant-modal-title');
+        const variantPromptLabel = document.getElementById('variant-prompt-label');
+        const variantOptionsGrid = document.getElementById('variant-options-grid');
+        const variantQtyDisplay = document.getElementById('variant-qty-display');
+        const backToTopBtn = document.getElementById('back-to-top-btn');
 
-        // 圖示庫載入失敗時不可中斷點餐流程
         function safeIcons() {
             try { if (window.lucide) window.lucide.createIcons(); } catch (e) { console.warn('lucide error', e); }
         }
@@ -691,7 +1013,7 @@
             return storeOrders[currentStoreId];
         }
 
-        // 依據網址參數或 Hash 解析目標餐廳（支援 ?store=1、?store=3、?s=1、#1、#3 或原本的 id）
+        // 依據網址參數或 Hash 解析目標餐廳（支援 ?store=8、?s=8、#8 或原本的 id）
         function resolveStoreFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
             const rawParam = urlParams.get('store') || urlParams.get('s') || window.location.hash.replace('#', '');
@@ -701,6 +1023,36 @@
             return matched ? matched.id : null;
         }
 
+        // 查找當前餐廳中某品項的設定資訊
+        function findMenuItemConfig(itemName) {
+            const store = getCurrentStore();
+            for (const group of store.menu) {
+                for (const itemObj of group.items) {
+                    const name = typeof itemObj === 'string' ? itemObj : itemObj.name;
+                    if (name === itemName) {
+                        return {
+                            group,
+                            itemObj,
+                            allowDuplicateEntries: Boolean(group.allowDuplicateEntries),
+                            customizable: Boolean(group.customizable || (typeof itemObj === 'object' && itemObj.customizable)),
+                            variants: (typeof itemObj === 'object' && Array.isArray(itemObj.variants)) ? itemObj.variants : null
+                        };
+                    }
+                }
+            }
+            return null;
+        }
+
+        // 避免 HTML 屬性中的單引號或特殊字元造成 XSS 或語法錯誤
+        function escapeHtmlAttr(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
         // ==========================================
         // 4. 初始化與渲染函數
         // ==========================================
@@ -708,7 +1060,6 @@
             const urlParams = new URLSearchParams(window.location.search);
             const targetStoreId = resolveStoreFromUrl();
 
-            // 當網址帶有指定餐廳參數（如 ?store=1 或 ?store=3）或明確指定 ?solo=1 時，預設啟用獨立模式；若 ?solo=0 則強制顯示切換列
             const soloParam = urlParams.get('solo');
             if (soloParam === '0') {
                 isSoloMode = false;
@@ -720,7 +1071,6 @@
                 currentStoreId = targetStoreId;
             }
 
-            // 監聽瀏覽器上一頁 / 下一頁或手動修改 Hash
             window.addEventListener('hashchange', () => {
                 const nextStoreId = resolveStoreFromUrl();
                 if (nextStoreId && nextStoreId !== currentStoreId) {
@@ -728,7 +1078,7 @@
                 }
             });
 
-            // 綁定彈窗選項按鈕點擊事件
+            // 綁定三寶麵線客製化彈窗選項點擊
             document.querySelectorAll('.opt-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const group = btn.dataset.group;
@@ -738,14 +1088,18 @@
                 });
             });
 
-            // 點擊 Modal 背景關閉
             if (customModal) {
                 customModal.addEventListener('click', (e) => {
                     if (e.target === customModal) closeCustomModal();
                 });
             }
 
-            // 綁定即時搜尋輸入事件
+            if (variantModal) {
+                variantModal.addEventListener('click', (e) => {
+                    if (e.target === variantModal) closeVariantModal();
+                });
+            }
+
             if (menuSearchInput) {
                 menuSearchInput.addEventListener('input', (e) => {
                     currentSearchQuery = e.target.value.trim();
@@ -758,37 +1112,34 @@
                 });
             }
 
-            // 監聽視窗捲動以自動高亮當前所在的分類膠囊 (ScrollSpy)
+            // 支援 ESC 鍵快速關閉開啟中的彈窗
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (!customModal.classList.contains('hidden')) closeCustomModal();
+                    if (!variantModal.classList.contains('hidden')) closeVariantModal();
+                }
+            });
+
             window.addEventListener('scroll', handleScrollSpy, { passive: true });
 
-            switchStore(currentStoreId, false);
+            switchStore(currentStoreId);
 
             copyBtn.addEventListener('click', copyOrderToClipboard);
             clearBtn.addEventListener('click', clearAllOrders);
         }
 
-        window.switchStore = function(storeId, updateUrl = true) {
+        window.switchStore = function(storeId) {
             currentStoreId = storeId;
             currentSearchQuery = '';
             activeCategoryIndex = 0;
-            if (menuSearchInput) menuSearchInput.value = '';
-            if (clearSearchBtn) clearSearchBtn.classList.add('hidden');
 
             const store = getCurrentStore();
 
             document.title = store.title;
             headerTitle.textContent = store.title;
 
-            if (updateUrl) {
-                try {
-                    if (window.location.protocol !== 'blob:') {
-                        // 同步更新網址參數與 Hash 為數字代碼 (1 或 3)
-                        const url = new URL(window.location.href);
-                        url.searchParams.set('store', store.paramCode);
-                        window.history.replaceState({}, '', url.toString());
-                    }
-                } catch (e) {}
-            }
+            if (menuSearchInput) menuSearchInput.value = '';
+            if (clearSearchBtn) clearSearchBtn.classList.add('hidden');
 
             renderStoreTabs();
             renderCategoryNav();
@@ -797,7 +1148,6 @@
             safeIcons();
         };
 
-        // 清除搜尋框
         window.clearMenuSearch = function() {
             currentSearchQuery = '';
             if (menuSearchInput) menuSearchInput.value = '';
@@ -807,7 +1157,6 @@
             safeIcons();
         };
 
-        // 手機版一鍵平滑捲動至明細區
         window.scrollToOrderSummary = function() {
             const target = document.getElementById('order-summary-section');
             if (target) {
@@ -815,7 +1164,13 @@
             }
         };
 
-        // 點擊分類膠囊平滑捲動至對應區塊（若該分類被摺疊則自動展開）
+        window.scrollToTop = function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        };
+
         window.scrollToCategory = function(catIndex) {
             activeCategoryIndex = catIndex;
             const collapseKey = `${currentStoreId}_${catIndex}`;
@@ -841,7 +1196,6 @@
             }
         };
 
-        // 切換單一分類的展開/收合
         window.toggleCategoryCollapse = function(catIndex) {
             const key = `${currentStoreId}_${catIndex}`;
             collapsedCategories[key] = !collapsedCategories[key];
@@ -850,8 +1204,16 @@
             safeIcons();
         };
 
-        // 捲動時自動同步上方分類膠囊的高亮狀態
         function handleScrollSpy() {
+            // 控制右下角 TOP 按鈕的顯示與隱藏（向下捲動超過 200px 時顯示）
+            if (backToTopBtn) {
+                if (window.scrollY > 200) {
+                    backToTopBtn.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+                } else {
+                    backToTopBtn.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+                }
+            }
+
             if (currentSearchQuery) return;
             const store = getCurrentStore();
             const threshold = window.innerWidth >= 640 ? 190 : 185;
@@ -879,7 +1241,6 @@
             const store = getCurrentStore();
             const orderList = getCurrentOrderList();
 
-            // 搜尋狀態下隱藏分類錨點列，聚焦顯示搜尋結果
             if (currentSearchQuery) {
                 categoryNavPills.classList.add('hidden');
                 return;
@@ -888,8 +1249,19 @@
             categoryNavPills.innerHTML = '';
 
             store.menu.forEach((group, idx) => {
-                // 計算該分類目前已點幾份
-                const catItemNames = new Set(group.items.map(i => typeof i === 'string' ? i : i.name));
+                // 蒐集該分類所有可能的品名（包含變體全名）以正確統計該分類已點份數
+                const catItemNames = new Set();
+                group.items.forEach(i => {
+                    if (typeof i === 'string') {
+                        catItemNames.add(i);
+                    } else {
+                        catItemNames.add(i.name);
+                        if (Array.isArray(i.variants)) {
+                            i.variants.forEach(v => catItemNames.add(v.fullName));
+                        }
+                    }
+                });
+
                 const catOrderedQty = orderList
                     .filter(o => catItemNames.has(o.name))
                     .reduce((sum, o) => sum + o.qty, 0);
@@ -912,7 +1284,6 @@
         }
 
         function renderStoreTabs() {
-            // 獨立模式下隱藏頂部餐廳切換列，避免誤觸切換到其他店家
             if (isSoloMode) {
                 storeTabs.classList.add('hidden');
                 return;
@@ -954,11 +1325,15 @@
             let totalMatchedItems = 0;
 
             store.menu.forEach((group, catIndex) => {
-                // 若有搜尋關鍵字，過濾該分類符合的品項
                 const filteredItems = keyword
                     ? group.items.filter(itemObj => {
-                        const name = typeof itemObj === 'string' ? itemObj : itemObj.name;
-                        return name.toLowerCase().includes(keyword);
+                        if (typeof itemObj === 'string') {
+                            return itemObj.toLowerCase().includes(keyword);
+                        }
+                        const baseMatch = itemObj.name.toLowerCase().includes(keyword);
+                        const variantMatch = Array.isArray(itemObj.variants) &&
+                            itemObj.variants.some(v => v.fullName.toLowerCase().includes(keyword) || v.label.toLowerCase().includes(keyword));
+                        return baseMatch || variantMatch;
                     })
                     : group.items;
 
@@ -971,20 +1346,25 @@
                 section.id = `cat-section-${catIndex}`;
                 section.className = 'bg-white rounded-2xl shadow-sm border border-slate-200 p-3.5 sm:p-5 transition-all';
 
+                const dupHintHtml = group.allowDuplicateEntries
+                    ? `<span class="text-[11px] font-medium text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-full">可重複分筆點餐</span>`
+                    : '';
+
                 const headerHtml = `
                     <button 
                         type="button" 
                         onclick="toggleCategoryCollapse(${catIndex})"
                         class="w-full flex items-center justify-between ${isCollapsed ? '' : 'mb-3.5 pb-2.5 border-b border-slate-100'} text-left group"
                     >
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-wrap">
                             <div class="p-1.5 rounded-lg ${group.bgBadge} ${group.color}">
                                 <i data-lucide="${group.icon}" class="w-4 h-4 sm:w-5 sm:h-5"></i>
                             </div>
                             <h3 class="font-bold text-base sm:text-lg text-slate-800">${group.category}</h3>
                             <span class="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">${filteredItems.length} 項</span>
+                            ${dupHintHtml}
                         </div>
-                        <div class="flex items-center gap-1 text-xs text-slate-400 group-hover:text-slate-700 transition">
+                        <div class="flex items-center gap-1 text-xs text-slate-400 group-hover:text-slate-700 transition shrink-0">
                             <span>${isCollapsed ? '展開' : '收合'}</span>
                             <i data-lucide="${isCollapsed ? 'chevron-down' : 'chevron-up'}" class="w-4 h-4"></i>
                         </div>
@@ -999,51 +1379,80 @@
 
                     filteredItems.forEach(itemObj => {
                         const itemName = typeof itemObj === 'string' ? itemObj : itemObj.name;
+                        const safeNameAttr = escapeHtmlAttr(itemName);
                         const isCustomizable = Boolean(group.customizable || (typeof itemObj === 'object' && itemObj.customizable));
+                        const hasVariants = Boolean(typeof itemObj === 'object' && Array.isArray(itemObj.variants));
 
                         const card = document.createElement('div');
                         card.className = 'flex items-center justify-between px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-amber-300 hover:shadow-sm transition-all duration-150 gap-2';
                         card.dataset.itemCard = itemName;
 
-                        const customBtnHtml = isCustomizable
-                            ? `<button 
-                                    type="button" 
-                                    onclick="openCustomModal('${itemName}')"
-                                    class="px-2 py-1 rounded-lg border border-amber-300 bg-amber-50 text-amber-800 text-xs font-bold hover:bg-amber-100 active:scale-95 transition shrink-0"
-                                    title="客製化醋或沙茶"
-                               >客製</button>`
-                            : '';
+                        if (hasVariants) {
+                            // 先選品項、再選口味模式卡片
+                            const variantTags = itemObj.variants.map(v => v.label).join(' / ');
+                            card.innerHTML = `
+                                <div class="min-w-0 flex-1 cursor-pointer" onclick="openVariantModal('${safeNameAttr}')">
+                                    <div class="font-medium text-slate-800 text-sm sm:text-base truncate">${itemName}</div>
+                                    <div class="text-[11px] text-slate-400 truncate mt-0.5">${variantTags}</div>
+                                </div>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <span 
+                                        class="hidden text-xs font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full select-none" 
+                                        data-variant-badge="${safeNameAttr}"
+                                    >已點 0</span>
+                                    <button 
+                                        type="button" 
+                                        onclick="openVariantModal('${safeNameAttr}')"
+                                        class="px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 text-xs sm:text-sm font-bold hover:bg-amber-400 active:scale-95 transition shadow-sm flex items-center gap-1 select-none"
+                                    >
+                                        <span>選口味</span>
+                                        <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </div>
+                            `;
+                        } else {
+                            // 一般單一品項（含可重複出現在明細的鍋貼/水餃與三寶麵線）
+                            const customBtnHtml = isCustomizable
+                                ? `<button 
+                                        type="button" 
+                                        onclick="openCustomModal('${safeNameAttr}')"
+                                        class="px-2 py-1 rounded-lg border border-amber-300 bg-amber-50 text-amber-800 text-xs font-bold hover:bg-amber-100 active:scale-95 transition shrink-0"
+                                        title="客製化醋或沙茶"
+                                   >客製</button>`
+                                : '';
 
-                        card.innerHTML = `
-                            <div class="flex items-center gap-1.5 min-w-0">
-                                <span class="font-medium text-slate-800 text-sm sm:text-base select-none truncate">${itemName}</span>
-                                ${customBtnHtml}
-                            </div>
-                            <div class="flex items-center gap-1.5 shrink-0">
-                                <button 
-                                    type="button" 
-                                    onclick="changeQuantity('${itemName}', -1)"
-                                    class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-slate-300 bg-white text-slate-600 flex items-center justify-center hover:bg-slate-100 active:scale-90 transition disabled:opacity-30 disabled:pointer-events-none select-none"
-                                    data-minus-btn="${itemName}"
-                                    disabled
-                                    aria-label="減少 ${itemName}"
-                                >
-                                    <i data-lucide="minus" class="w-4 h-4"></i>
-                                </button>
-                                <span 
-                                    class="w-6 text-center font-bold text-sm text-slate-700 select-none" 
-                                    data-qty-display="${itemName}"
-                                >0</span>
-                                <button 
-                                    type="button" 
-                                    onclick="changeQuantity('${itemName}', 1)"
-                                    class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center hover:bg-amber-400 active:scale-90 transition shadow-sm select-none"
-                                    aria-label="增加 ${itemName}"
-                                >
-                                    <i data-lucide="plus" class="w-4 h-4"></i>
-                                </button>
-                            </div>
-                        `;
+                            card.innerHTML = `
+                                <div class="flex items-center gap-1.5 min-w-0">
+                                    <span class="font-medium text-slate-800 text-sm sm:text-base select-none truncate">${itemName}</span>
+                                    ${customBtnHtml}
+                                </div>
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    <button 
+                                        type="button" 
+                                        onclick="changeQuantity('${safeNameAttr}', -1)"
+                                        class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-slate-300 bg-white text-slate-600 flex items-center justify-center hover:bg-slate-100 active:scale-90 transition disabled:opacity-30 disabled:pointer-events-none select-none"
+                                        data-minus-btn="${safeNameAttr}"
+                                        disabled
+                                        aria-label="減少 ${safeNameAttr}"
+                                    >
+                                        <i data-lucide="minus" class="w-4 h-4"></i>
+                                    </button>
+                                    <span 
+                                        class="w-6 text-center font-bold text-sm text-slate-700 select-none" 
+                                        data-qty-display="${safeNameAttr}"
+                                    >0</span>
+                                    <button 
+                                        type="button" 
+                                        onclick="changeQuantity('${safeNameAttr}', 1)"
+                                        class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center hover:bg-amber-400 active:scale-90 transition shadow-sm select-none"
+                                        aria-label="增加 ${safeNameAttr}"
+                                    >
+                                        <i data-lucide="plus" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            `;
+                        }
+
                         grid.appendChild(card);
                     });
 
@@ -1059,7 +1468,7 @@
         }
 
         // ==========================================
-        // 5. 客製化彈窗操作邏輯
+        // 5A. 三寶麵線客製化彈窗操作邏輯
         // ==========================================
         window.openCustomModal = function(itemName, editingOrderId = null) {
             modalState.editingOrderId = editingOrderId;
@@ -1120,12 +1529,10 @@
             const orderMap = storeOrderMaps[currentStoreId];
 
             if (modalState.editingOrderId) {
-                // 編輯既有項目：先移除舊項目，再依新條件合併或插入
                 const oldIdx = orderList.findIndex(o => o.id === modalState.editingOrderId);
                 if (oldIdx > -1) orderList.splice(oldIdx, 1);
             }
 
-            // 檢查是否已有「相同品名 + 相同客製備註」的項目，若有則自動合併數量
             const sameItem = orderList.find(o => o.name === modalState.itemName && o.note === noteStr);
             if (sameItem) {
                 sameItem.qty += modalState.qty;
@@ -1138,7 +1545,6 @@
                 });
             }
 
-            // 依照菜單原始順序排列
             orderList.sort((a, b) => (orderMap.get(a.name) ?? 999) - (orderMap.get(b.name) ?? 999));
 
             closeCustomModal();
@@ -1147,19 +1553,95 @@
         };
 
         // ==========================================
-        // 6. 核心點餐邏輯 (針對當前餐廳操作)
+        // 5B. 先選品項、再選口味彈窗邏輯 (8方雲集整併品項)
+        // ==========================================
+        window.openVariantModal = function(baseName) {
+            const config = findMenuItemConfig(baseName);
+            if (!config || !config.variants) return;
+
+            variantModalState.baseName = baseName;
+            variantModalState.promptLabel = config.itemObj.promptLabel || '請選擇口味：';
+            variantModalState.variants = config.variants;
+            variantModalState.selectedIndex = 0;
+            variantModalState.qty = 1;
+
+            variantModalTitle.textContent = baseName;
+            variantPromptLabel.textContent = variantModalState.promptLabel + '：';
+            variantQtyDisplay.textContent = '1';
+
+            renderVariantOptionsUI();
+            variantModal.classList.remove('hidden');
+            safeIcons();
+        };
+
+        window.closeVariantModal = function() {
+            variantModal.classList.add('hidden');
+        };
+
+        window.selectVariantOption = function(idx) {
+            variantModalState.selectedIndex = idx;
+            renderVariantOptionsUI();
+        };
+
+        window.changeVariantQty = function(delta) {
+            variantModalState.qty = Math.max(1, variantModalState.qty + delta);
+            variantQtyDisplay.textContent = variantModalState.qty;
+        };
+
+        function renderVariantOptionsUI() {
+            variantOptionsGrid.innerHTML = '';
+            variantModalState.variants.forEach((v, idx) => {
+                const isSelected = idx === variantModalState.selectedIndex;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.onclick = () => selectVariantOption(idx);
+                btn.className = isSelected
+                    ? 'py-2.5 px-3 rounded-xl border-2 border-amber-500 bg-amber-50 text-amber-900 text-sm font-bold transition text-center'
+                    : 'py-2.5 px-3 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50 transition text-center';
+                btn.textContent = v.label;
+                variantOptionsGrid.appendChild(btn);
+            });
+        }
+
+        window.confirmVariantOrder = function() {
+            const chosenVariant = variantModalState.variants[variantModalState.selectedIndex];
+            if (!chosenVariant) return;
+
+            const fullName = chosenVariant.fullName;
+            const orderList = getCurrentOrderList();
+            const orderMap = storeOrderMaps[currentStoreId];
+
+            const existingItem = orderList.find(item => item.name === fullName && !item.note);
+            if (existingItem) {
+                existingItem.qty += variantModalState.qty;
+            } else {
+                orderList.push({
+                    id: 'ord_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                    name: fullName,
+                    note: '',
+                    qty: variantModalState.qty
+                });
+                orderList.sort((a, b) => (orderMap.get(a.name) ?? 999) - (orderMap.get(b.name) ?? 999));
+            }
+
+            closeVariantModal();
+            renderStoreTabs();
+            updateOrderUI();
+        };
+
+        // ==========================================
+        // 6. 核心點餐邏輯 (支援鍋貼/水餃獨立重複新增)
         // ==========================================
         window.changeQuantity = function(itemName, delta) {
             try {
                 const orderList = getCurrentOrderList();
                 const orderMap = storeOrderMaps[currentStoreId];
+                const config = findMenuItemConfig(itemName);
+                const allowDuplicate = Boolean(config && config.allowDuplicateEntries);
 
                 if (delta > 0) {
-                    // 快速按「+」預設加入無客製化（正常口味）項目
-                    const normalItem = orderList.find(item => item.name === itemName && !item.note);
-                    if (normalItem) {
-                        normalItem.qty += delta;
-                    } else {
+                    if (allowDuplicate) {
+                        // 水餃跟鍋貼：每次點「+」皆建立獨立一筆明細，不合併數量（方便多人個別計算顆數）
                         orderList.push({
                             id: 'ord_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
                             name: itemName,
@@ -1167,18 +1649,43 @@
                             qty: delta
                         });
                         orderList.sort((a, b) => (orderMap.get(a.name) ?? 999) - (orderMap.get(b.name) ?? 999));
+                    } else {
+                        // 其他一般品項：相同品名自動累加數量
+                        const normalItem = orderList.find(item => item.name === itemName && !item.note);
+                        if (normalItem) {
+                            normalItem.qty += delta;
+                        } else {
+                            orderList.push({
+                                id: 'ord_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                                name: itemName,
+                                note: '',
+                                qty: delta
+                            });
+                            orderList.sort((a, b) => (orderMap.get(a.name) ?? 999) - (orderMap.get(b.name) ?? 999));
+                        }
                     }
                 } else {
-                    // 按「-」優先扣除正常口味；若無正常口味則從該品項最後一筆客製項目扣除
-                    let targetIndex = orderList.findIndex(item => item.name === itemName && !item.note);
-                    if (targetIndex === -1) {
+                    // 按「-」優先扣除正常口味；若是可重複獨立品項則從該品項最後一筆扣除
+                    let targetIndex = -1;
+                    if (allowDuplicate) {
                         for (let i = orderList.length - 1; i >= 0; i--) {
                             if (orderList[i].name === itemName) {
                                 targetIndex = i;
                                 break;
                             }
                         }
+                    } else {
+                        targetIndex = orderList.findIndex(item => item.name === itemName && !item.note);
+                        if (targetIndex === -1) {
+                            for (let i = orderList.length - 1; i >= 0; i--) {
+                                if (orderList[i].name === itemName) {
+                                    targetIndex = i;
+                                    break;
+                                }
+                            }
+                        }
                     }
+
                     if (targetIndex > -1) {
                         const newQty = orderList[targetIndex].qty + delta;
                         if (newQty <= 0) {
@@ -1196,7 +1703,7 @@
             }
         };
 
-        // 針對右側明細特定列調整數量
+        // 針對右側明細特定列調整數量（水餃、鍋貼可針對個別筆數單獨調整顆數）
         window.changeOrderRowQty = function(orderId, delta) {
             const orderList = getCurrentOrderList();
             const idx = orderList.findIndex(item => item.id === orderId);
@@ -1231,23 +1738,10 @@
         // ==========================================
         // 7. 同步更新畫面 (菜單數量、右側明細、輸出文字)
         // ==========================================
-        function isItemCustomizableInCurrentStore(itemName) {
-            const store = getCurrentStore();
-            for (const group of store.menu) {
-                for (const item of group.items) {
-                    const name = typeof item === 'string' ? item : item.name;
-                    if (name === itemName) {
-                        return Boolean(group.customizable || (typeof item === 'object' && item.customizable));
-                    }
-                }
-            }
-            return false;
-        }
-
         function updateOrderUI() {
             const orderList = getCurrentOrderList();
 
-            // 1. 更新左側菜單上的總份數（加總同品名所有客製組合）與按鈕狀態
+            // 1A. 更新左側一般菜單品項的總份數與按鈕狀態
             const allQtyDisplays = document.querySelectorAll('[data-qty-display]');
             allQtyDisplays.forEach(el => {
                 const name = el.dataset.qtyDisplay;
@@ -1257,8 +1751,8 @@
                 
                 el.textContent = totalForItem;
                 
-                const minusBtn = document.querySelector(`[data-minus-btn="${name}"]`);
-                const card = document.querySelector(`[data-item-card="${name}"]`);
+                const minusBtn = document.querySelector(`[data-minus-btn="${CSS.escape(name)}"]`);
+                const card = document.querySelector(`[data-item-card="${CSS.escape(name)}"]`);
                 
                 if (minusBtn) minusBtn.disabled = totalForItem === 0;
                 if (card) {
@@ -1266,6 +1760,35 @@
                         card.classList.add('border-amber-400', 'bg-amber-50/40');
                         card.classList.remove('border-slate-200', 'bg-slate-50/50');
                     } else {
+                        card.classList.remove('border-amber-400', 'bg-amber-50/40');
+                        card.classList.add('border-slate-200', 'bg-slate-50/50');
+                    }
+                }
+            });
+
+            // 1B. 更新左側「先選品項、再選口味」整併卡片的已點徽章狀態
+            const allVariantBadges = document.querySelectorAll('[data-variant-badge]');
+            allVariantBadges.forEach(badge => {
+                const baseName = badge.dataset.variantBadge;
+                const config = findMenuItemConfig(baseName);
+                const card = document.querySelector(`[data-item-card="${CSS.escape(baseName)}"]`);
+                if (!config || !config.variants) return;
+
+                const variantNames = new Set(config.variants.map(v => v.fullName));
+                const totalForGroup = orderList
+                    .filter(item => variantNames.has(item.name))
+                    .reduce((sum, item) => sum + item.qty, 0);
+
+                if (totalForGroup > 0) {
+                    badge.textContent = `已點 ${totalForGroup}`;
+                    badge.classList.remove('hidden');
+                    if (card) {
+                        card.classList.add('border-amber-400', 'bg-amber-50/40');
+                        card.classList.remove('border-slate-200', 'bg-slate-50/50');
+                    }
+                } else {
+                    badge.classList.add('hidden');
+                    if (card) {
                         card.classList.remove('border-amber-400', 'bg-amber-50/40');
                         card.classList.add('border-slate-200', 'bg-slate-50/50');
                     }
@@ -1281,7 +1804,7 @@
                 if (totalQty === 0) {
                     mobileBarSummary.textContent = '尚未選擇餐點';
                 } else {
-                    mobileBarSummary.textContent = `已點 ${orderList.length} 種品項，共 ${totalQty} 份`;
+                    mobileBarSummary.textContent = `已點 ${orderList.length} 筆明細，共 ${totalQty} 份`;
                 }
             }
 
@@ -1299,12 +1822,14 @@
 
                 orderItemsList.innerHTML = '';
                 orderList.forEach((item, index) => {
-                    const canCustomize = isItemCustomizableInCurrentStore(item.name);
+                    const config = findMenuItemConfig(item.name);
+                    const canCustomize = Boolean(config && config.customizable);
+                    const safeItemNameAttr = escapeHtmlAttr(item.name);
                     const noteBadgeHtml = item.note
                         ? `<span class="inline-block mt-0.5 text-xs font-semibold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md">${item.note}</span>`
                         : '';
                     const editBtnHtml = canCustomize
-                        ? `<button type="button" onclick="openCustomModal('${item.name}', '${item.id}')" class="text-slate-400 hover:text-amber-600 p-1 rounded-lg transition" title="調整客製口味"><i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i></button>`
+                        ? `<button type="button" onclick="openCustomModal('${safeItemNameAttr}', '${item.id}')" class="text-slate-400 hover:text-amber-600 p-1 rounded-lg transition" title="調整客製口味"><i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i></button>`
                         : '';
 
                     const li = document.createElement('li');
@@ -1345,7 +1870,6 @@
             updateOutputText();
         }
 
-        // 固定輸出「品項 x數量」或「品項 x數量，客製備註」格式
         function updateOutputText() {
             const orderList = getCurrentOrderList();
             if (orderList.length === 0) {
@@ -1400,7 +1924,6 @@
             }
         }
 
-        // 複製目前餐廳的專屬獨立網址（自動帶入 ?store=1 或 ?store=3）
         window.copyStoreUrl = async function() {
             const store = getCurrentStore();
             let shareUrl = '';

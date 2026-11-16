@@ -65,9 +65,10 @@
                     <div class="bg-amber-500 text-white p-2 rounded-xl shadow-sm">
                         <i data-lucide="utensils" class="w-5 h-5"></i>
                     </div>
-                    <h1 id="header-title" class="text-lg sm:text-xl font-bold tracking-tight text-slate-900">
-                        簡易點餐系統
-                    </h1>
+                    <div class="min-w-0">
+                        <h1 id="header-title" class="text-lg sm:text-xl font-bold tracking-tight text-slate-900">簡易點餐系統</h1>
+                        <a id="header-phone" href="#" class="hidden items-center gap-1 text-xs font-medium text-amber-700 hover:text-amber-900 mt-0.5"><i data-lucide="phone" class="w-3 h-3"></i><span></span></a>
+                    </div>
                 </div>
                 <button
                     type="button"
@@ -378,6 +379,7 @@
                 paramCode: "1",
                 shortName: "香村",
                 title: "香村簡易點餐系統",
+                phone: "049-2580155",
                 menu: [
                     {
                         category: "火鍋",
@@ -438,8 +440,9 @@
             {
                 id: "ahua",
                 paramCode: "2",
-                shortName: "阿花扣仔嗲",
+                shortName: "阿花",
                 title: "阿花扣仔嗲簡易點餐",
+                phone: "049-2583668",
                 menu: [
                     {
                         category: "炸物",
@@ -506,8 +509,9 @@
             {
                 id: "sanbao",
                 paramCode: "3",
-                shortName: "三寶麵線",
+                shortName: "三寶",
                 title: "三寶麵線簡易點餐系統",
+                phone: "049-2739828",
                 menu: [
                     {
                         category: "麵線",
@@ -560,10 +564,49 @@
                 ]
             },
             {
+                id: "songbai",
+                paramCode: "4",
+                shortName: "松柏坑油飯",
+                title: "松柏坑油飯簡易點餐系統",
+                phone: "0918-804658",
+                menu: [
+                    {
+                        category: "飯麵",
+                        icon: "utensils",
+                        color: "text-amber-600",
+                        bgBadge: "bg-amber-50",
+                        items: [
+                            "滷肉飯（大）",
+                            "雞肉飯（大）",
+                            "爌肉筍飯（大）",
+                            "高麗菜飯",
+                            "油飯",
+                            "素菜飯",
+                            "炒麵 + 甜辣醬（大）"
+                        ]
+                    },
+                    {
+                        category: "湯品",
+                        icon: "cup-soda",
+                        color: "text-emerald-600",
+                        bgBadge: "bg-emerald-50",
+                        items: [
+                            "藥膳湯",
+                            "豆腐湯",
+                            "紫菜湯",
+                            "貢丸湯",
+                            "味噌湯",
+                            "蒸蛋（不要肉）"
+                        ]
+                    }
+                ]
+            },
+            {
                 id: "lingwu",
                 paramCode: "5",
                 shortName: "零五",
                 title: "零五簡易點餐系統",
+                phone: "049-2730691",
                 menu: [
                     {
                         category: "粥品",
@@ -690,8 +733,9 @@
             {
                 id: "bafang",
                 paramCode: "8",
-                shortName: "8方雲集",
+                shortName: "8方",
                 title: "8方雲集簡易點餐系統",
+                phone: "049-2734834",
                 menu: [
                     {
                         category: "鍋貼",
@@ -1172,6 +1216,17 @@
 
             document.title = store.title;
             headerTitle.textContent = store.title;
+
+            const phoneEl = document.getElementById('header-phone');
+            if (phoneEl) {
+                const hasPhone = Boolean(store.phone);
+                phoneEl.classList.toggle('hidden', !hasPhone);
+                phoneEl.classList.toggle('inline-flex', hasPhone);
+                if (hasPhone) {
+                    phoneEl.href = 'tel:' + store.phone.replace(/[^\d+]/g, '');
+                    phoneEl.querySelector('span').textContent = store.phone;
+                }
+            }
 
             if (menuSearchInput) menuSearchInput.value = '';
             if (clearSearchBtn) clearSearchBtn.classList.add('hidden');

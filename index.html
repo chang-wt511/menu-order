@@ -463,16 +463,15 @@
                         ]
                     },
                     {
-                        category: "土魠魚 / 魚羹",
+                        category: "土魠魚羹",
                         icon: "soup",
                         color: "text-orange-500",
                         bgBadge: "bg-orange-50",
                         items: [
                             "土魠魚麵",
-                            "土魠魚飯",
+                            "土魠魚飯加蛋",
                             "土魠魚米粉",
-                            "土魠魚冬粉",
-                            "魚羹"
+                            "土魠魚冬粉"
                         ]
                     },
                     {
@@ -579,7 +578,7 @@
                             {
                                 name: "滷肉飯",
                                 promptLabel: "請選擇份量",
-                                buttonLabel: "份量",
+                                buttonLabel: "選份量",
                                 variants: [
                                     { label: "正常", fullName: "滷肉飯" },
                                     { label: "加大", fullName: "滷肉飯，加大" }
@@ -588,7 +587,7 @@
                             {
                                 name: "雞肉飯",
                                 promptLabel: "請選擇份量",
-                                buttonLabel: "份量",
+                                buttonLabel: "選份量",
                                 variants: [
                                     { label: "正常", fullName: "雞肉飯" },
                                     { label: "加大", fullName: "雞肉飯，加大" }
@@ -597,7 +596,7 @@
                             {
                                 name: "爌肉筍飯",
                                 promptLabel: "請選擇份量",
-                                buttonLabel: "份量",
+                                buttonLabel: "選份量",
                                 variants: [
                                     { label: "正常", fullName: "爌肉筍飯" },
                                     { label: "加大", fullName: "爌肉筍飯，加大" }
@@ -606,7 +605,7 @@
                             {
                                 name: "高麗菜飯",
                                 promptLabel: "請選擇份量",
-                                buttonLabel: "份量",
+                                buttonLabel: "選份量",
                                 variants: [
                                     { label: "正常", fullName: "高麗菜飯" },
                                     { label: "加大", fullName: "高麗菜飯，加大" }
@@ -614,7 +613,7 @@
                             },
                             "油飯",
                             "素菜飯",
-                            "炒麵 + 甜辣醬"
+                            "炒麵 + 甜辣醬，加大"
                         ]
                     },
                     {
@@ -879,11 +878,11 @@
                         bgBadge: "bg-amber-50",
                         items: [
                             {
-                                name: "經典鮮雞湯麵",
+                                name: "經典鮮雞湯麵-贈小菜",
                                 promptLabel: "請選擇湯頭口味",
                                 variants: [
-                                    { label: "原味", fullName: "原味經典鮮雞湯麵" },
-                                    { label: "麻油", fullName: "麻油經典鮮雞湯麵" }
+                                    { label: "原味", fullName: "原味經典鮮雞湯麵-贈小菜" },
+                                    { label: "麻油", fullName: "麻油經典鮮雞湯麵-贈小菜" }
                                 ]
                             },
                             {
@@ -902,16 +901,10 @@
                                     { label: "和風", fullName: "和風-菜肉大抄手" }
                                 ]
                             },
-                            {
-                                name: "乾麵",
-                                promptLabel: "請選擇口味",
-                                variants: [
-                                    { label: "古早味", fullName: "古早味乾麵" },
-                                    { label: "麻醬", fullName: "麻醬乾麵" },
-                                    { label: "紹辣", fullName: "紹辣乾麵" },
-                                    { label: "招牌", fullName: "招牌乾麵(微辣)" }
-                                ]
-                            },
+                            "古早味乾麵",
+                            "麻醬乾麵",
+                            "紹辣乾麵",
+                            "招牌乾麵(微辣)",
                             "梁師傅排骨麵",
                             "古早味湯麵",
                             "酸辣湯麵",
@@ -920,7 +913,7 @@
                                 name: "珍珠餛飩麵",
                                 promptLabel: "請選擇口味",
                                 variants: [
-                                    { label: "原味", fullName: "珍珠餛飩麵" },
+                                    { label: "原味", fullName: "珍珠餛飩湯麵" },
                                     { label: "紹辣乾", fullName: "紹辣珍珠餛飩乾麵" },
                                     { label: "紹辣湯", fullName: "紹辣珍珠餛飩湯麵" }
                                 ]
@@ -948,11 +941,11 @@
                             "珍珠餛飩湯",
                             "菜肉大餛飩湯",
                             {
-                                name: "經典鮮雞湯",
+                                name: "經典鮮雞湯-贈小菜",
                                 promptLabel: "請選擇湯頭口味",
                                 variants: [
-                                    { label: "原味", fullName: "原味經典鮮雞湯" },
-                                    { label: "麻油", fullName: "麻油經典鮮雞湯" }
+                                    { label: "原味", fullName: "原味經典鮮雞湯-贈小菜" },
+                                    { label: "麻油", fullName: "麻油經典鮮雞湯-贈小菜" }
                                 ]
                             }
                         ]
@@ -1238,7 +1231,8 @@
                 menuSearchInput.addEventListener('compositionend', () => menuSearchInput.dispatchEvent(new Event('input')));
             }
 
-            loadOrders();
+            // 重新整理即清空訂單：順便清掉舊版留下的暫存資料
+            try { localStorage.removeItem('quick-order-v1'); } catch (e) { /* ignore */ }
             switchStore(currentStoreId);
 
             copyBtn.addEventListener('click', copyOrderToClipboard);
@@ -1880,30 +1874,7 @@
             updateOrderUI();
         };
 
-const STORAGE_KEY = 'quick-order-v1';
-
-        // 還原上次訂單（只保留仍存在於菜單中的品項，舊版品名格式相同故可沿用）
-        function loadOrders() {
-            try {
-                const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-                STORES_DATA.forEach(store => {
-                    const map = storeOrderMaps[store.id];
-                    const list = Array.isArray(saved[store.id]) ? saved[store.id] : [];
-                    storeOrders[store.id] = list
-                        .filter(o => o && map.has(o.name) && Number.isInteger(o.qty) && o.qty > 0)
-                        .map(o => ({
-                            id: o.id || ('ord_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6)),
-                            name: o.name, note: String(o.note || ''), qty: o.qty
-                        }));
-                });
-            } catch (e) { /* 儲存被停用時略過 */ }
-        }
-
-        function saveOrders() {
-            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(storeOrders)); } catch (e) { /* ignore */ }
-        }
-
-        let clearArmTimer = null;
+let clearArmTimer = null;
         function resetClearBtn() {
             clearTimeout(clearArmTimer);
             clearArmTimer = null;
@@ -2060,7 +2031,6 @@ const STORAGE_KEY = 'quick-order-v1';
 
             // 4. 更新純文字輸出區
             updateOutputText();
-            saveOrders();
         }
 
         function updateOutputText() {

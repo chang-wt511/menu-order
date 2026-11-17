@@ -379,308 +379,12 @@
 
     <script>
         // ==========================================
-        // 1. 多餐廳菜單資料庫 (編號：港帝=1, 阿花=2, 三寶麵線=3, 松柏坑=4, 零五=5, 8方雲集=8, 香村=9)
+        // 1. 多餐廳菜單資料庫 (編號：零五=1, 8方雲集=2, 松柏坑=3, 港帝=4, 阿花=5, 三寶麵線=6, 香村=7)
         // ==========================================
         const STORES_DATA = [
             {
-                id: "gangdi",
-                paramCode: "1",
-                shortName: "港帝",
-                title: "港帝簡易點餐系統",
-                phone: "049-2732627",
-                menu: [
-                    {
-                        category: "炒飯",
-                        icon: "utensils-crossed",
-                        color: "text-amber-600",
-                        bgBadge: "bg-amber-50",
-                        items: [
-                            "花枝炒飯",
-                            "牛肉炒飯",
-                            "蝦仁炒飯",
-                            "羊肉炒飯",
-                            "魷魚炒飯",
-                            "海鮮炒飯",
-                            "香腸炒飯",
-                            "雞肉炒飯",
-                            "鹹豬肉炒飯",
-                            "玉米蛋炒飯",
-                            "肉絲炒飯",
-                            "火腿蛋炒飯",
-                            "蛋炒飯"
-                        ]
-                    },
-                    {
-                        category: "炒麵",
-                        icon: "soup",
-                        color: "text-orange-500",
-                        bgBadge: "bg-orange-50",
-                        items: [
-                            "花枝炒麵",
-                            "牛肉炒麵",
-                            "蝦仁炒麵",
-                            "羊肉炒麵",
-                            "魷魚炒麵",
-                            "海鮮炒麵",
-                            "蚵仔炒麵",
-                            "雞肉炒麵",
-                            "蛤仔炒麵",
-                            "肉絲炒麵"
-                        ]
-                    },
-                    {
-                        category: "湯麵/粥",
-                        icon: "soup",
-                        color: "text-rose-500",
-                        bgBadge: "bg-rose-50",
-                        items: [
-                            "花枝湯麵",
-                            "海鮮湯麵",
-                            "海鮮粥",
-                            "皮蛋瘦肉粥",
-                            "蚵仔湯麵",
-                            "蛤仔湯麵",
-                            "雞肉湯麵",
-                            "肉絲湯麵"
-                        ]
-                    },
-                    {
-                        category: "燴飯",
-                        icon: "utensils",
-                        color: "text-sky-600",
-                        bgBadge: "bg-sky-50",
-                        items: [
-                            "花枝燴飯",
-                            "牛肉燴飯",
-                            "蝦仁燴飯",
-                            "羊肉燴飯",
-                            "鹹豬肉燴飯",
-                            "蚵仔燴飯",
-                            "海鮮燴飯",
-                            "蛤仔燴飯",
-                            "雞肉燴飯",
-                            "豬肉燴飯"
-                        ]
-                    },
-                    {
-                        category: "湯類",
-                        icon: "cup-soda",
-                        color: "text-emerald-600",
-                        bgBadge: "bg-emerald-50",
-                        items: [
-                            "花枝湯",
-                            "蛤仔湯",
-                            "蚵仔湯",
-                            "隔間肉湯",
-                            "海鮮湯",
-                            "魚皮湯",
-                            "粉腸湯",
-                            "雞肉湯",
-                            "蛋花湯",
-                            "貢丸湯",
-                            "豆腐湯"
-                        ]
-                    }
-                ]
-            },
-            {
-                id: "ahua",
-                paramCode: "2",
-                shortName: "阿花",
-                title: "阿花扣仔嗲簡易點餐",
-                phone: "049-2583668",
-                menu: [
-                    {
-                        category: "炸物",
-                        icon: "utensils-crossed",
-                        color: "text-amber-600",
-                        bgBadge: "bg-amber-50",
-                        items: [
-                            "蚵嗲",
-                            "肉嗲",
-                            "菜條",
-                            "豆腐",
-                            "米糕",
-                            "蒜仔",
-                            "蘿蔔糕",
-                            "番薯片",
-                            "芋頭片",
-                            "杏鮑菇"
-                        ]
-                    },
-                    {
-                        category: "土魠魚羹",
-                        icon: "soup",
-                        color: "text-orange-500",
-                        bgBadge: "bg-orange-50",
-                        items: [
-                            "土魠魚羹麵",
-                            "土魠魚羹飯＋蛋",
-                            "土魠魚羹米粉",
-                            "土魠魚羹冬粉"
-                        ]
-                    },
-                    {
-                        category: "肉羹 / 麵飯",
-                        icon: "utensils",
-                        color: "text-rose-500",
-                        bgBadge: "bg-rose-50",
-                        items: [
-                            "肉羹湯",
-                            "肉羹麵",
-                            "肉羹飯",
-                            "肉羹米粉",
-                            "肉羹冬粉",
-                            "黃麵湯",
-                            "黃麵乾",
-                            "意麵湯",
-                            "意麵乾",
-                            "滷肉飯"
-                        ]
-                    },
-                    {
-                        category: "湯品",
-                        icon: "cup-soda",
-                        color: "text-emerald-600",
-                        bgBadge: "bg-emerald-50",
-                        items: [
-                            "豬血湯",
-                            "豆腐湯",
-                            "貢丸湯"
-                        ]
-                    }
-                ]
-            },
-            {
-                id: "sanbao",
-                paramCode: "3",
-                shortName: "三寶",
-                title: "三寶麵線簡易點餐系統",
-                phone: "049-2739828",
-                menu: [
-                    {
-                        category: "麵線",
-                        icon: "soup",
-                        color: "text-amber-600",
-                        bgBadge: "bg-amber-50",
-                        customizable: true,
-                        items: [
-                            "大腸麵線(大)",
-                            "大腸麵線(小)",
-                            "肉羹麵線(大)",
-                            "肉羹麵線(小)",
-                            "蚵仔麵線(大)",
-                            "蚵仔麵線(小)",
-                            "三寶麵線(大)",
-                            "三寶麵線(小)",
-                            "清麵線(大)",
-                            "清麵線(小)"
-                        ]
-                    },
-                    {
-                        category: "香菇肉羹 / 飯",
-                        icon: "utensils-crossed",
-                        color: "text-orange-500",
-                        bgBadge: "bg-orange-50",
-                        items: [
-                            { name: "香菇肉羹麵", customizable: true },
-                            { name: "香菇肉羹飯", customizable: true },
-                            { name: "香菇肉羹米粉", customizable: true },
-                            { name: "香菇肉羹湯(大)", customizable: true },
-                            { name: "香菇肉羹湯(小)", customizable: true },
-                            "滷肉飯(大)",
-                            "滷肉飯(小)"
-                        ]
-                    },
-                    {
-                        category: "小菜",
-                        icon: "salad",
-                        color: "text-emerald-600",
-                        bgBadge: "bg-emerald-50",
-                        items: [
-                            "燙青菜",
-                            "皮蛋豆腐",
-                            "滷大腸",
-                            "海帶",
-                            "豆干",
-                            "蒜泥白肉"
-                        ]
-                    }
-                ]
-            },
-            {
-                id: "songbai",
-                paramCode: "4",
-                shortName: "松柏坑",
-                title: "松柏坑油飯簡易點餐系統",
-                phone: "0918-804658",
-                menu: [
-                    {
-                        category: "飯麵",
-                        icon: "utensils",
-                        color: "text-amber-600",
-                        bgBadge: "bg-amber-50",
-                        items: [
-                            {
-                                name: "滷肉飯",
-                                promptLabel: "請選擇份量",
-                                buttonLabel: "選份量",
-                                variants: [
-                                    { label: "正常", fullName: "滷肉飯" },
-                                    { label: "加大", fullName: "滷肉飯，加大" }
-                                ]
-                            },
-                            {
-                                name: "雞肉飯",
-                                promptLabel: "請選擇份量",
-                                buttonLabel: "選份量",
-                                variants: [
-                                    { label: "正常", fullName: "雞肉飯" },
-                                    { label: "加大", fullName: "雞肉飯，加大" }
-                                ]
-                            },
-                            {
-                                name: "爌肉筍飯",
-                                promptLabel: "請選擇份量",
-                                buttonLabel: "選份量",
-                                variants: [
-                                    { label: "正常", fullName: "爌肉筍飯" },
-                                    { label: "加大", fullName: "爌肉筍飯，加大" }
-                                ]
-                            },
-                            {
-                                name: "高麗菜飯",
-                                promptLabel: "請選擇份量",
-                                buttonLabel: "選份量",
-                                variants: [
-                                    { label: "正常", fullName: "高麗菜飯" },
-                                    { label: "加大", fullName: "高麗菜飯，加大" }
-                                ]
-                            },
-                            "油飯",
-                            "素菜飯",
-                            "炒麵＋甜辣醬"
-                        ]
-                    },
-                    {
-                        category: "湯品",
-                        icon: "cup-soda",
-                        color: "text-emerald-600",
-                        bgBadge: "bg-emerald-50",
-                        items: [
-                            "藥膳湯",
-                            "豆腐湯",
-                            "紫菜湯",
-                            "貢丸湯",
-                            "味噌湯",
-                            "蒸蛋（不要肉）"
-                        ]
-                    }
-                ]
-            },
-            {
                 id: "lingwu",
-                paramCode: "5",
+                paramCode: "1",
                 shortName: "零五",
                 title: "零五簡易點餐系統",
                 phone: "049-2730691",
@@ -809,7 +513,7 @@
             },
             {
                 id: "bafang",
-                paramCode: "8",
+                paramCode: "2",
                 shortName: "8方",
                 title: "8方雲集簡易點餐系統",
                 phone: "049-2734834",
@@ -1050,8 +754,304 @@
                 ]
             },
             {
+                id: "songbai",
+                paramCode: "3",
+                shortName: "松柏坑",
+                title: "松柏坑油飯簡易點餐系統",
+                phone: "0918-804658",
+                menu: [
+                    {
+                        category: "飯麵",
+                        icon: "utensils",
+                        color: "text-amber-600",
+                        bgBadge: "bg-amber-50",
+                        items: [
+                            {
+                                name: "滷肉飯",
+                                promptLabel: "請選擇份量",
+                                buttonLabel: "選份量",
+                                variants: [
+                                    { label: "正常", fullName: "滷肉飯" },
+                                    { label: "加大", fullName: "滷肉飯，加大" }
+                                ]
+                            },
+                            {
+                                name: "雞肉飯",
+                                promptLabel: "請選擇份量",
+                                buttonLabel: "選份量",
+                                variants: [
+                                    { label: "正常", fullName: "雞肉飯" },
+                                    { label: "加大", fullName: "雞肉飯，加大" }
+                                ]
+                            },
+                            {
+                                name: "爌肉筍飯",
+                                promptLabel: "請選擇份量",
+                                buttonLabel: "選份量",
+                                variants: [
+                                    { label: "正常", fullName: "爌肉筍飯" },
+                                    { label: "加大", fullName: "爌肉筍飯，加大" }
+                                ]
+                            },
+                            {
+                                name: "高麗菜飯",
+                                promptLabel: "請選擇份量",
+                                buttonLabel: "選份量",
+                                variants: [
+                                    { label: "正常", fullName: "高麗菜飯" },
+                                    { label: "加大", fullName: "高麗菜飯，加大" }
+                                ]
+                            },
+                            "油飯",
+                            "素菜飯",
+                            "炒麵＋甜辣醬"
+                        ]
+                    },
+                    {
+                        category: "湯品",
+                        icon: "cup-soda",
+                        color: "text-emerald-600",
+                        bgBadge: "bg-emerald-50",
+                        items: [
+                            "藥膳湯",
+                            "豆腐湯",
+                            "紫菜湯",
+                            "貢丸湯",
+                            "味噌湯",
+                            "蒸蛋（不要肉）"
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "gangdi",
+                paramCode: "4",
+                shortName: "港帝",
+                title: "港帝簡易點餐系統",
+                phone: "049-2732627",
+                menu: [
+                    {
+                        category: "炒飯",
+                        icon: "utensils-crossed",
+                        color: "text-amber-600",
+                        bgBadge: "bg-amber-50",
+                        items: [
+                            "花枝炒飯",
+                            "牛肉炒飯",
+                            "蝦仁炒飯",
+                            "羊肉炒飯",
+                            "魷魚炒飯",
+                            "海鮮炒飯",
+                            "香腸炒飯",
+                            "雞肉炒飯",
+                            "鹹豬肉炒飯",
+                            "玉米蛋炒飯",
+                            "肉絲炒飯",
+                            "火腿蛋炒飯",
+                            "蛋炒飯"
+                        ]
+                    },
+                    {
+                        category: "炒麵",
+                        icon: "soup",
+                        color: "text-orange-500",
+                        bgBadge: "bg-orange-50",
+                        items: [
+                            "花枝炒麵",
+                            "牛肉炒麵",
+                            "蝦仁炒麵",
+                            "羊肉炒麵",
+                            "魷魚炒麵",
+                            "海鮮炒麵",
+                            "蚵仔炒麵",
+                            "雞肉炒麵",
+                            "蛤仔炒麵",
+                            "肉絲炒麵"
+                        ]
+                    },
+                    {
+                        category: "湯麵/粥",
+                        icon: "soup",
+                        color: "text-rose-500",
+                        bgBadge: "bg-rose-50",
+                        items: [
+                            "花枝湯麵",
+                            "海鮮湯麵",
+                            "海鮮粥",
+                            "皮蛋瘦肉粥",
+                            "蚵仔湯麵",
+                            "蛤仔湯麵",
+                            "雞肉湯麵",
+                            "肉絲湯麵"
+                        ]
+                    },
+                    {
+                        category: "燴飯",
+                        icon: "utensils",
+                        color: "text-sky-600",
+                        bgBadge: "bg-sky-50",
+                        items: [
+                            "花枝燴飯",
+                            "牛肉燴飯",
+                            "蝦仁燴飯",
+                            "羊肉燴飯",
+                            "鹹豬肉燴飯",
+                            "蚵仔燴飯",
+                            "海鮮燴飯",
+                            "蛤仔燴飯",
+                            "雞肉燴飯",
+                            "豬肉燴飯"
+                        ]
+                    },
+                    {
+                        category: "湯類",
+                        icon: "cup-soda",
+                        color: "text-emerald-600",
+                        bgBadge: "bg-emerald-50",
+                        items: [
+                            "花枝湯",
+                            "蛤仔湯",
+                            "蚵仔湯",
+                            "隔間肉湯",
+                            "海鮮湯",
+                            "魚皮湯",
+                            "粉腸湯",
+                            "雞肉湯",
+                            "蛋花湯",
+                            "貢丸湯",
+                            "豆腐湯"
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "ahua",
+                paramCode: "5",
+                shortName: "阿花",
+                title: "阿花扣仔嗲簡易點餐",
+                phone: "049-2583668",
+                menu: [
+                    {
+                        category: "炸物",
+                        icon: "utensils-crossed",
+                        color: "text-amber-600",
+                        bgBadge: "bg-amber-50",
+                        items: [
+                            "蚵嗲",
+                            "肉嗲",
+                            "菜條",
+                            "豆腐",
+                            "米糕",
+                            "蒜仔",
+                            "蘿蔔糕",
+                            "番薯片",
+                            "芋頭片",
+                            "杏鮑菇"
+                        ]
+                    },
+                    {
+                        category: "土魠魚羹",
+                        icon: "soup",
+                        color: "text-orange-500",
+                        bgBadge: "bg-orange-50",
+                        items: [
+                            "土魠魚羹麵",
+                            "土魠魚羹飯＋蛋",
+                            "土魠魚羹米粉",
+                            "土魠魚羹冬粉"
+                        ]
+                    },
+                    {
+                        category: "肉羹 / 麵飯",
+                        icon: "utensils",
+                        color: "text-rose-500",
+                        bgBadge: "bg-rose-50",
+                        items: [
+                            "肉羹湯",
+                            "肉羹麵",
+                            "肉羹飯",
+                            "肉羹米粉",
+                            "肉羹冬粉",
+                            "黃麵湯",
+                            "黃麵乾",
+                            "意麵湯",
+                            "意麵乾",
+                            "滷肉飯"
+                        ]
+                    },
+                    {
+                        category: "湯品",
+                        icon: "cup-soda",
+                        color: "text-emerald-600",
+                        bgBadge: "bg-emerald-50",
+                        items: [
+                            "豬血湯",
+                            "豆腐湯",
+                            "貢丸湯"
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "sanbao",
+                paramCode: "6",
+                shortName: "三寶",
+                title: "三寶麵線簡易點餐系統",
+                phone: "049-2739828",
+                menu: [
+                    {
+                        category: "麵線",
+                        icon: "soup",
+                        color: "text-amber-600",
+                        bgBadge: "bg-amber-50",
+                        customizable: true,
+                        items: [
+                            "大腸麵線(大)",
+                            "大腸麵線(小)",
+                            "肉羹麵線(大)",
+                            "肉羹麵線(小)",
+                            "蚵仔麵線(大)",
+                            "蚵仔麵線(小)",
+                            "三寶麵線(大)",
+                            "三寶麵線(小)",
+                            "清麵線(大)",
+                            "清麵線(小)"
+                        ]
+                    },
+                    {
+                        category: "香菇肉羹 / 飯",
+                        icon: "utensils-crossed",
+                        color: "text-orange-500",
+                        bgBadge: "bg-orange-50",
+                        items: [
+                            { name: "香菇肉羹麵", customizable: true },
+                            { name: "香菇肉羹飯", customizable: true },
+                            { name: "香菇肉羹米粉", customizable: true },
+                            { name: "香菇肉羹湯(大)", customizable: true },
+                            { name: "香菇肉羹湯(小)", customizable: true },
+                            "滷肉飯(大)",
+                            "滷肉飯(小)"
+                        ]
+                    },
+                    {
+                        category: "小菜",
+                        icon: "salad",
+                        color: "text-emerald-600",
+                        bgBadge: "bg-emerald-50",
+                        items: [
+                            "燙青菜",
+                            "皮蛋豆腐",
+                            "滷大腸",
+                            "海帶",
+                            "豆干",
+                            "蒜泥白肉"
+                        ]
+                    }
+                ]
+            },
+            {
                 id: "xiangcun",
-                paramCode: "9",
+                paramCode: "7",
                 shortName: "香村",
                 title: "香村簡易點餐系統",
                 phone: "049-2580155",
